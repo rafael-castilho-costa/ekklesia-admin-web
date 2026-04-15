@@ -1,73 +1,93 @@
-<mat-toolbar color="primary" style="background-color: #255291;">
-  <button mat-icon-button (click)="sidenav.toggle()" class="custom-icon-button">
-    <mat-icon style="color: aliceblue;">menu</mat-icon>
-  </button>
-  <div>
-    <img class="logo-IEAD" src="../../assets/img/logo-IEAD.png">
-  </div>
+<mat-sidenav-container class="app-shell">
+  <mat-sidenav
+    #sidenav
+    class="app-sidebar"
+    [ngClass]="{'sidebar-collapsed': !isOpened}"
+    mode="side"
+    opened="true"
+  >
+    <div class="sidebar-header" [matTooltip]="(churchName$ | async) ?? 'Igreja'" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+      <div class="brand-icon">
+        <mat-icon>church</mat-icon>
+      </div>
+      <div class="brand-text">
+        <strong>{{ churchName$ | async }}</strong>
+        <span>Sistema de Gestão</span>
+        <span class="church-id">ID: {{ churchId }}</span>
+      </div>
+    </div>
 
-  <span style="flex: 1 1 0%; box-sizing: border-box;"></span>
+    <div class="sidebar-label">Navegacao</div>
 
-  <span class="position-item-header">
-    <a mat-list-item routerLink="/notificações">
-      <mat-icon matListIcon class="mat-18" style="color: white;">notifications</mat-icon>
-    </a>
-  </span>
-
-  <button mat-icon-button [matMenuTriggerFor]="menu" class="custom-icon-button">
-    <mat-icon style="color: white;">account_circle</mat-icon>
-  </button>
-
-  <span>
-    <mat-menu #menu="matMenu">
-
-      <button mat-menu-item routerLink="/profile">
-        <mat-icon>person</mat-icon>
-        <span>Perfil</span>
-      </button>
-
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>Sair</span>
-      </button>
-
-    </mat-menu>
-  </span>
-
-</mat-toolbar>
-<mat-sidenav-container>
-
-  <!-- Sidenav -->
-   <mat-sidenav #sidenav mode="side" [(opened)]="isOpened">
-    <mat-nav-list class="nav-menu" style="justify-content: center;">
-      <a mat-list-item href="/home">
-        <mat-icon matListIcon class="mat-18 custom-icon">home</mat-icon>
-        <span class="name">Home</span>
+    <nav class="sidebar-nav">
+      <a class="sidebar-item" [routerLink]="tenantLink('home')" routerLinkActive="active-item" matTooltip="Dashboard" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
       </a>
-      <a class="ajust" mat-list-item href="/membros">
-        <mat-icon matListIcon class="mat-18 custom-icon">group</mat-icon>
-        <span class="name">Membros</span>
+      <a class="sidebar-item" [routerLink]="tenantLink('membros')" routerLinkActive="active-item" matTooltip="Membros" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+        <mat-icon>group</mat-icon>
+        <span>Membros</span>
       </a>
-      <a mat-list-item href="/visitantes">
-        <mat-icon matListIcon class="mat-18 custom-icon">person_add</mat-icon>
-        <span class="name">Visitantes</span>
+      <a class="sidebar-item" [routerLink]="tenantLink('agenda')" routerLinkActive="active-item" matTooltip="Financeiro" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+        <mat-icon>attach_money</mat-icon>
+        <span>Financeiro</span>
       </a>
-      <a mat-list-item href="/agenda">
-        <mat-icon matListIcon class="mat-18 custom-icon">event</mat-icon>
-        <span class="name">Agenda</span>
+      <a class="sidebar-item" [routerLink]="tenantLink('visitantes')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+        <mat-icon>menu_book</mat-icon>
+        <span>Escola Biblica</span>
       </a>
-    </mat-nav-list>
+      <div class="sidebar-item disabled-item" matTooltip="Relatorios (em breve)" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+        <mat-icon>description</mat-icon>
+        <span>Relatorios</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">v1.0 - Prototipo</div>
   </mat-sidenav>
 
-  <!-- Header and Main Content -->
-  <mat-sidenav-content>
-    <!-- Toolbar -->
+  <mat-sidenav-content class="app-content">
+    <header class="topbar">
+      <button mat-icon-button class="menu-button" (click)="toggleSidenav()">
+        <mat-icon>menu</mat-icon>
+      </button>
 
+      <div class="page-title">
+        <mat-icon>dashboard_customize</mat-icon>
+        <h1>{{ pageTitle }}</h1>
+        <span class="tenant-chip">{{ churchId }}</span>
+      </div>
 
-    <!-- Main Content -->
-    <div style="padding: 16px;">
-    <router-outlet></router-outlet>
+      <div class="topbar-actions">
+        <button
+          mat-icon-button
+          class="action-button"
+          matBadge="3"
+          matBadgeSize="small"
+          matBadgeColor="warn"
+          matBadgeOverlap="true"
+        >
+          <mat-icon>notifications_none</mat-icon>
+        </button>
 
-    </div>
+        <button mat-icon-button class="avatar-button" [matMenuTriggerFor]="menu">
+          AD
+        </button>
+
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>person</mat-icon>
+            <span>Perfil</span>
+          </button>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sair</span>
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <main class="content-wrapper">
+      <router-outlet></router-outlet>
+    </main>
   </mat-sidenav-content>
 </mat-sidenav-container>

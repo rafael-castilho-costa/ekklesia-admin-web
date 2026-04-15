@@ -1,29 +1,13 @@
 import { Component } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
+  standalone: true,
   selector: 'app-home',
+  imports: [MatIconModule],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-    currentUser: any;
-
-    public get welcomeMessage(): string {
-      let welcomeMessage :string ='';
-
-      switch (this.currentUser?.persona?.genderType){
-        case 'MALE':
-          welcomeMessage += 'Bem-vindo';
-          break;
-        case 'FEMALE':
-          welcomeMessage += 'Bem-vinda';
-          break;
-        default:
-          welcomeMessage += 'Bem-vindo (a)'
-          break;
-      }
-      welcomeMessage += ' ao Cristo FY';
-
-      return welcomeMessage;
-    }
+  currentUser: any;
 }

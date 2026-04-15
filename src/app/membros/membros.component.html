@@ -1,21 +1,94 @@
-<div class="container-page">
-    <div class="container-header">
-          <mat-icon class="mat-18 custom-icon">group</mat-icon>
-          <h1>Membros e Congregados</h1>
-    </div>
-    <div>
-      <h1></h1>
-      <h1></h1>
-    </div>
+<section class="members-page">
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Total Ativos</span>
+      <strong>{{ totalAtivos }}</strong>
+    </article>
 
-    <div style="text-align: right">
-       <button class="btn-membros">Adicionar</button>
-    </div>
+    <article class="summary-card">
+      <span>Visitantes</span>
+      <strong>{{ totalVisitantes }}</strong>
+    </article>
 
-  <div class="container-list">
-    <mat-toolbar>
-
-    </mat-toolbar>
+    <article class="summary-card">
+      <span>Afastados</span>
+      <strong>{{ totalAfastados }}</strong>
+    </article>
   </div>
 
-</div>
+  <section class="table-panel">
+    <header class="panel-header">
+      <div class="panel-title">
+        <mat-icon>group</mat-icon>
+        <h2>Lista de Membros</h2>
+      </div>
+
+      <button type="button" class="new-member-button" (click)="novoMembro()">
+        <mat-icon>add</mat-icon>
+        Novo Membro
+      </button>
+    </header>
+
+    <div class="filters-row">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Buscar por nome ou ministerio..."
+          [(ngModel)]="searchTerm"
+        >
+      </div>
+
+      <div class="filter-select">
+        <select [(ngModel)]="statusFilter">
+          <option value="todos">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="visitante">Visitantes</option>
+          <option value="afastado">Afastados</option>
+        </select>
+        <mat-icon>expand_more</mat-icon>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Ministerio</th>
+            <th>Status</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let membro of membrosFiltrados; trackBy: trackByNome">
+            <td>{{ membro.nome }}</td>
+            <td>{{ membro.telefone }}</td>
+            <td>{{ membro.ministerio }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="statusClass(membro.status)">
+                {{ statusLabel(membro.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="actions">
+                <button type="button" class="icon-button" (click)="editarMembro(membro)" aria-label="Editar membro">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button type="button" class="icon-button danger" (click)="removerMembro(membro)" aria-label="Remover membro">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="membrosFiltrados.length === 0">
+            <td colspan="5" class="empty-state">Nenhum membro encontrado para o filtro informado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

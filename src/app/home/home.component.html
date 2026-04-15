@@ -1,9 +1,178 @@
-<section class="container-home">
-  <div class="home">
-    <div class="home-welcome">
-      <h2 [innerHTML]="welcomeMessage"></h2>
+<section class="dashboard-layout">
+  <div class="metrics-grid">
+    <article class="metric-card">
+      <div class="metric-header">
+        <span>Membros Ativos</span>
+        <div class="metric-icon">
+          <mat-icon>groups</mat-icon>
+        </div>
+      </div>
+      <strong class="metric-value">156</strong>
+      <p class="metric-note">+3 este mes</p>
+    </article>
 
+    <article class="metric-card">
+      <div class="metric-header">
+        <span>Alunos EBD</span>
+        <div class="metric-icon">
+          <mat-icon>menu_book</mat-icon>
+        </div>
+      </div>
+      <strong class="metric-value">148</strong>
+      <p class="metric-note">6 turmas</p>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-header">
+        <span>Saldo Atual</span>
+        <div class="metric-icon">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+      </div>
+      <strong class="metric-value">R$ 26.550</strong>
+      <p class="metric-note">+12% vs mes anterior</p>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-header">
+        <span>Frequencia EBD</span>
+        <div class="metric-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+      </div>
+      <strong class="metric-value">76%</strong>
+      <p class="metric-note">Media mensal</p>
+    </article>
+  </div>
+
+  <div class="charts-grid">
+    <article class="panel">
+      <h2>Fluxo de Caixa Mensal</h2>
+      <div class="bar-chart-area">
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 62;"></span>
+            <span class="bar outgoing" style="--value: 40;"></span>
+          </div>
+          <span class="month-label">Set</span>
+        </div>
+
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 68;"></span>
+            <span class="bar outgoing" style="--value: 44;"></span>
+          </div>
+          <span class="month-label">Out</span>
+        </div>
+
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 65;"></span>
+            <span class="bar outgoing" style="--value: 48;"></span>
+          </div>
+          <span class="month-label">Nov</span>
+        </div>
+
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 98;"></span>
+            <span class="bar outgoing" style="--value: 56;"></span>
+          </div>
+          <span class="month-label">Dez</span>
+        </div>
+
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 70;"></span>
+            <span class="bar outgoing" style="--value: 45;"></span>
+          </div>
+          <span class="month-label">Jan</span>
+        </div>
+
+        <div class="month-group">
+          <div class="month-bars">
+            <span class="bar incoming" style="--value: 82;"></span>
+            <span class="bar outgoing" style="--value: 24;"></span>
+          </div>
+          <span class="month-label">Fev</span>
+        </div>
+      </div>
+
+      <div class="chart-legend">
+        <span><i class="legend-color incoming"></i>Entradas</span>
+        <span><i class="legend-color outgoing"></i>Saidas</span>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Crescimento de Membros</h2>
+      <div class="line-chart">
+        <svg viewBox="0 0 640 250" role="img" aria-label="Grafico de crescimento de membros e visitantes">
+          <defs>
+            <pattern id="grid" width="80" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 80 0 L 0 0 0 50" fill="none" stroke="#d9e0ea" stroke-width="1"></path>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="640" height="250" fill="url(#grid)"></rect>
+
+          <polyline
+            points="0,58 128,52 256,47 384,42 512,37 640,32"
+            fill="none"
+            stroke="#183a72"
+            stroke-width="3"
+            stroke-linecap="round"
+          ></polyline>
+
+          <polyline
+            points="0,232 128,224 256,236 384,218 512,228 640,237"
+            fill="none"
+            stroke="#f39c2f"
+            stroke-width="3"
+            stroke-linecap="round"
+          ></polyline>
+
+          <g fill="#ffffff" stroke="#183a72" stroke-width="3">
+            <circle cx="0" cy="58" r="6"></circle>
+            <circle cx="128" cy="52" r="6"></circle>
+            <circle cx="256" cy="47" r="6"></circle>
+            <circle cx="384" cy="42" r="6"></circle>
+            <circle cx="512" cy="37" r="6"></circle>
+            <circle cx="640" cy="32" r="6"></circle>
+          </g>
+
+          <g fill="#ffffff" stroke="#f39c2f" stroke-width="3">
+            <circle cx="0" cy="232" r="6"></circle>
+            <circle cx="128" cy="224" r="6"></circle>
+            <circle cx="256" cy="236" r="6"></circle>
+            <circle cx="384" cy="218" r="6"></circle>
+            <circle cx="512" cy="228" r="6"></circle>
+            <circle cx="640" cy="237" r="6"></circle>
+          </g>
+        </svg>
+      </div>
+      <div class="chart-legend line-legend">
+        <span><i class="legend-color members"></i>Membros</span>
+        <span><i class="legend-color visitors"></i>Visitantes</span>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel alerts-panel">
+    <h2>Alertas e Notificacoes</h2>
+
+    <div class="alert-item warning">
+      <mat-icon>warning_amber</mat-icon>
+      <span>Pedro Henrique Rocha esta afastado ha 3 meses</span>
     </div>
 
-  </div>
+    <div class="alert-item info">
+      <mat-icon>info</mat-icon>
+      <span>5 novos visitantes no ultimo mes</span>
+    </div>
+
+    <div class="alert-item danger">
+      <mat-icon>error_outline</mat-icon>
+      <span>Turma Adolescentes com frequencia abaixo de 70%</span>
+    </div>
+  </article>
 </section>

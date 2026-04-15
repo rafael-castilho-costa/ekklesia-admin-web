@@ -1,73 +1,94 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import {MatToolbar} from "@angular/material/toolbar";
+
+type MemberStatus = 'ativo' | 'visitante' | 'afastado';
+
+interface Member {
+  nome: string;
+  telefone: string;
+  ministerio: string;
+  status: MemberStatus;
+}
 
 @Component({
   standalone: true,
   selector: 'app-membros',
-  imports: [MatIconModule, MatToolbar],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './membros.component.html',
   styleUrls: ['./membros.component.css']
 })
-export class MembrosComponent implements OnInit {
-onSubmit(): void {
-  if (this.cadastroForm.valid) {
-    console.log ('Formulário Enviado!', this.cadastroForm.value);
-    alert('Cadastro Realizado com Sucesso!');
-    this.cadastroForm.reset();
-  } else {
-    alert('Preencha os campos obrigatórios corretamente.');
-  }
-}
-  cadastroForm: FormGroup;
+export class MembrosComponent {
+  searchTerm = '';
+  statusFilter: 'todos' | MemberStatus = 'todos';
 
-  constructor(private fb: FormBuilder) {
-    this.cadastroForm = this.fb.group({
-      nome: ['',[Validators.required, Validators.minLength(3)]],
-      cpf: ['', [Validators.required, Validators.pattern(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/), this.validarCpf,]],
-      email: ['',[Validators.required, Validators.email]],
-      telefone: ['',[Validators.required, Validators.pattern(/^\(\d{2}\) \d{4,5}-\d{4}$/)]],
-      endereco: [''],
-      nascimento: ['', Validators.required],
-      sexo: ['', Validators.required],
+  readonly membros: Member[] = [
+    { nome: 'Maria Silva Santos', telefone: '(11) 98765-4321', ministerio: 'Louvor', status: 'ativo' },
+    { nome: 'Joao Pedro Oliveira', telefone: '(11) 91234-5678', ministerio: 'Jovens', status: 'ativo' },
+    { nome: 'Ana Clara Ferreira', telefone: '(11) 99876-5432', ministerio: 'Intercessao', status: 'ativo' },
+    { nome: 'Carlos Eduardo Lima', telefone: '(11) 93456-7890', ministerio: 'Midia', status: 'ativo' },
+    { nome: 'Francisca Souza', telefone: '(11) 95678-1234', ministerio: 'Diaconia', status: 'ativo' },
+    { nome: 'Rafael Mendes Costa', telefone: '(11) 97890-1234', ministerio: 'Jovens', status: 'visitante' },
+    { nome: 'Luisa Almeida', telefone: '(11) 92345-6789', ministerio: 'Escola Biblica', status: 'ativo' },
+    { nome: 'Pedro Henrique Rocha', telefone: '(11) 94567-8901', ministerio: 'Pregacao', status: 'afastado' }
+  ];
+
+  get totalAtivos(): number {
+    return this.membros.filter((membro) => membro.status === 'ativo').length;
+  }
+
+  get totalVisitantes(): number {
+    return this.membros.filter((membro) => membro.status === 'visitante').length;
+  }
+
+  get totalAfastados(): number {
+    return this.membros.filter((membro) => membro.status === 'afastado').length;
+  }
+
+  get membrosFiltrados(): Member[] {
+    const termo = this.searchTerm.trim().toLowerCase();
+
+    return this.membros.filter((membro) => {
+      const correspondeStatus = this.statusFilter === 'todos' || membro.status === this.statusFilter;
+      const correspondeBusca =
+        !termo ||
+        membro.nome.toLowerCase().includes(termo) ||
+        membro.ministerio.toLowerCase().includes(termo);
+
+      return correspondeStatus && correspondeBusca;
     });
-   }
-
-  ngOnInit(): void {}
-
-  validarCpf(control:any) {
-    const cpf = control.value.replace(/\D/g,'');
-    if (!cpf || cpf.lenght !== 11 || /^(\d)\1+$/.test(cpf)) {
-      return { cpfInvalido: true};
-    }
-
-    let soma = 0;
-    let resto;
-
-    for (let i = 1; i <= 9; i++) {
-      soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-    }
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.substring(9,10))) {
-      return {cpfInvalido: true};
-    }
-
-    soma = 0;
-
-    for (let i = 1; i <= 10; i++) {
-      soma += parseInt (cpf.substring(i- 1, i)) * (12 - i);
-    }
-
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.substring(10,11))) {
-      return {cpfInvalido: true};
-    }
-
-    return null;
-
   }
 
+  statusLabel(status: MemberStatus): string {
+    if (status === 'visitante') {
+      return 'visitante';
+    }
+
+    if (status === 'afastado') {
+      return 'afastado';
+    }
+
+    return 'ativo';
+  }
+
+  statusClass(status: MemberStatus): string {
+    return `status-${status}`;
+  }
+
+  novoMembro(): void {
+    console.log('Acao: novo membro');
+  }
+
+  editarMembro(membro: Member): void {
+    console.log('Acao: editar membro', membro.nome);
+  }
+
+  removerMembro(membro: Member): void {
+    console.log('Acao: remover membro', membro.nome);
+  }
+
+  trackByNome(_: number, membro: Member): string {
+    return membro.nome;
+  }
 }
