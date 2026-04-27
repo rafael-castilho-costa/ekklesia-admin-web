@@ -2,11 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, switchMap, throwError } from 'rxjs';
 import { AuthApiService } from '../core/api/auth-api.service';
 import { AuthSessionService } from '../core/auth/auth-session.service';
+import { TenantContextService } from '../core/tenant/tenant-context.service';
 import { AuthLoginRequest } from '../shared/models/api.models';
-import { DebugService } from '../debug.service';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +20,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly authApiService = inject(AuthApiService);
   private readonly authSessionService = inject(AuthSessionService);
-  private readonly debugService = inject(DebugService);
+  private readonly tenantContextService = inject(TenantContextService);
 
   public form: FormGroup;
   public showPassword = false;
@@ -30,12 +30,8 @@ export class LoginComponent {
   constructor() {
     this.form = this.fb.group({
       email: ['admin@ekklesia.com', [Validators.required, Validators.email]],
-      password: ['Cassiane@121121', [Validators.required, Validators.minLength(6)]]
+      password: ['123456', [Validators.required, Validators.minLength(6)]]
     });
-
-    // Debug: Test API connection on component init
-    console.log('🔍 LoginComponent inicializado, testando API...');
-    this.debugService.testApiConnection();
   }
 
   public get formControls() {
@@ -55,90 +51,65 @@ export class LoginComponent {
     }
 
     const { email, password } = this.form.getRawValue();
-    const sanitizedEmail = String(email ?? '').trim();
-    const sanitizedPassword = String(password ?? '');
+    const loginRequest: AuthLoginRequest = {
+      email: String(email ?? '').trim(),
+      password: String(password ?? '')
+    };
 
     this.isSubmitting = true;
 
-    const loginRequest: AuthLoginRequest = {
-      email: sanitizedEmail,
-      password: sanitizedPassword
-    };
-
-    console.log('🔐 Iniciando login...', { email: sanitizedEmail });
-
     this.authApiService
       .login(loginRequest)
-      .pipe(finalize(() => (this.isSubmitting = false)))
+      .pipe(
+        switchMap((response) => {
+          this.authSessionService.setSession({ accessToken: response.token });
+
+          const churchIdHeader = this.authSessionService.getChurchIdHeaderValue();
+          if (!churchIdHeader) {
+            return throwError(() => new Error('Nao foi possivel identificar a igreja no token recebido.'));
+          }
+
+          this.tenantContextService.setChurchId(churchIdHeader);
+
+          return this.authApiService.getAuthenticatedUser();
+        }),
+        finalize(() => (this.isSubmitting = false))
+      )
       .subscribe({
-        next: (response) => {
-          console.log('✅ Login bem-sucedido, salvando token...');
-          console.log('🔑 Token recebido:', response.token?.substring(0, 20) + '...');
+        next: (user) => {
+          const currentSession = this.authSessionService.getSession();
+          if (!currentSession?.accessToken) {
+            this.authErrorMessage = 'Nao foi possivel concluir a autenticacao.';
+            return;
+          }
 
-          // 1️⃣ SALVA O TOKEN IMEDIATAMENTE
           this.authSessionService.setSession({
-            accessToken: response.token
+            ...currentSession,
+            user
           });
-          console.log('✅ Token salvo em AuthSessionService');
-          console.log('🔍 Token em memória agora:', this.authSessionService.getAccessToken()?.substring(0, 20) + '...');
-
-          // 2️⃣ AGORA CHAMA /auth/me COM O INTERCEPTOR ENVIANDO O TOKEN
-          console.log('📡 Chamando GET /auth/me com Authorization header...');
-          this.authApiService.getAuthenticatedUser().subscribe({
-            next: (user) => {
-              console.log('✅ GET /auth/me retornou 200 OK');
-              console.log('✅ Dados do usuário:', user);
-
-              // ATUALIZA A SESSÃO COM DADOS COMPLETOS DO USUÁRIO
-              this.authSessionService.setSession({
-                accessToken: response.token,
-                user: user
-              });
-              console.log('✅ Sessão atualizada com dados do usuário');
-              console.log('✅ Redirecionando para dashboard...');
-
-              // Redireciona para /:churchId/home
-              const churchId = user.churchId || this.authSessionService.getSession()?.user?.churchId;
-              if (churchId) {
-                this.router.navigate([churchId, 'home']);
-              } else {
-                console.warn('⚠️ churchId não encontrado, redirecionando para /login');
-                this.router.navigate(['/login']);
-              }
-            },
-            error: (getAuthError) => {
-              console.error('❌ GET /auth/me retornou erro:', getAuthError);
-              if (getAuthError.status === 401) {
-                console.error('❌ 401 Unauthorized - O token não foi enviado ou é inválido');
-                this.authErrorMessage = 'Sessão expirada ou token inválido. Tente fazer login novamente.';
-              } else {
-                console.error('❌ Erro ao carregar usuário:', getAuthError.message);
-                this.authErrorMessage = 'Erro ao carregar dados do usuário';
-              }
-            }
-          });
+          this.tenantContextService.setChurchId(String(user.churchId));
+          this.router.navigate([String(user.churchId), 'home']);
         },
-        error: (loginError) => {
-          console.error('❌ POST /auth/login retornou erro:', loginError);
-          this.authErrorMessage = this.resolveLoginErrorMessage(loginError);
+        error: (error) => {
+          this.authErrorMessage = this.resolveLoginErrorMessage(error);
         }
       });
   }
 
   private resolveLoginErrorMessage(error: unknown): string {
-    console.error('🔍 Analisando erro de login:', error);
-
     if (typeof error === 'object' && error !== null && 'status' in error) {
-      const httpError = error as any;
+      const httpError = error as {
+        status?: number;
+        error?: { message?: string };
+        message?: string;
+      };
 
       if (httpError.status === 0) {
-        console.error('❌ Erro de conexão: Não conseguiu comunicar com a API');
-        return 'Não foi possível conectar com o servidor. Verifique se a API está rodando em http://localhost:8081 e se há CORS configurado.';
+        return 'Nao foi possivel conectar com o servidor em http://localhost:8081.';
       }
 
-      if (httpError.status === 401 || httpError.status === 403) {
-        console.error('❌ Credenciais inválidas (401/403)');
-        return 'Email ou senha inválidos.';
+      if (httpError.status === 400 || httpError.status === 401 || httpError.status === 403) {
+        return httpError.error?.message || 'Email ou senha invalidos.';
       }
 
       if (httpError.error?.message) {
@@ -154,6 +125,6 @@ export class LoginComponent {
       return error.message;
     }
 
-    return 'Não foi possível realizar o login. Tente novamente.';
+    return 'Nao foi possivel realizar o login. Tente novamente.';
   }
 }

@@ -390,7 +390,11 @@ export class PersonasFormComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    const request: PersonaRequest = this.form.getRawValue();
+    const formValue = this.form.getRawValue();
+    const request: PersonaRequest = {
+      ...formValue,
+      taxId: this.onlyDigits(formValue.taxId)
+    };
 
     const operation = this.isEditMode
       ? this.personasApiService.update(this.personaId!, request)
@@ -411,5 +415,9 @@ export class PersonasFormComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/personas']);
+  }
+
+  private onlyDigits(value: string | null | undefined): string {
+    return value?.replace(/\D/g, '') ?? '';
   }
 }

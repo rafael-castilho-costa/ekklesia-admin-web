@@ -6,6 +6,7 @@
     mode="side"
     opened="true"
   >
+    <div class="sidebar-content">
     <div class="sidebar-header" [matTooltip]="(churchName$ | async) ?? 'Igreja'" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
       <div class="brand-icon">
         <mat-icon>church</mat-icon>
@@ -24,15 +25,15 @@
         <mat-icon>dashboard</mat-icon>
         <span>Dashboard</span>
       </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('membros')" routerLinkActive="active-item" matTooltip="Membros" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+      <a class="sidebar-item" [routerLink]="tenantLink('members')" routerLinkActive="active-item" matTooltip="Membros" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
         <mat-icon>group</mat-icon>
         <span>Membros</span>
       </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('agenda')" routerLinkActive="active-item" matTooltip="Financeiro" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+      <a class="sidebar-item" [routerLink]="tenantLink('finance')" routerLinkActive="active-item" matTooltip="Financeiro" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
         <mat-icon>attach_money</mat-icon>
         <span>Financeiro</span>
       </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('visitantes')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+      <a class="sidebar-item" [routerLink]="tenantLink('visitors')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
         <mat-icon>menu_book</mat-icon>
         <span>Escola Biblica</span>
       </a>
@@ -43,6 +44,7 @@
     </nav>
 
     <div class="sidebar-footer">v1.0 - Prototipo</div>
+    </div>
   </mat-sidenav>
 
   <mat-sidenav-content class="app-content">

@@ -2,13 +2,13 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 
-export const CHURCH_ID_REGEX = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+export const CHURCH_ID_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 
 @Injectable({
   providedIn: 'root'
 })
 export class TenantContextService {
-  static readonly DEFAULT_CHURCH_ID = 'iead-jardim-todos-os-santos';
+  static readonly DEFAULT_CHURCH_ID = '1';
   private static readonly STORAGE_KEY = 'ekklesia.churchId';
 
   private readonly churchIdSubject = new BehaviorSubject<string | null>(null);
@@ -67,13 +67,7 @@ export class TenantContextService {
       return null;
     }
 
-    const normalizedChurchId = churchId
-      .trim()
-      .toLowerCase()
-      .replace(/[\s_]+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/-{2,}/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const normalizedChurchId = churchId.trim().toLowerCase();
 
     if (!CHURCH_ID_REGEX.test(normalizedChurchId)) {
       return null;

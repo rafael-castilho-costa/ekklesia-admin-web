@@ -300,6 +300,42 @@
   bottom: 18px;
 }
 
+.label-0 {
+  top: 2px;
+  left: 32%;
+}
+
+.label-1 {
+  right: 8px;
+  top: 56%;
+}
+
+.label-2 {
+  right: 62px;
+  bottom: 14px;
+}
+
+.label-3 {
+  left: 28px;
+  bottom: 18px;
+}
+
+.label-4 {
+  left: 10px;
+  top: 44%;
+}
+
+.label-5 {
+  right: 24px;
+  top: 16px;
+}
+
+.donut-empty {
+  position: absolute;
+  color: #607792;
+  font-weight: 700;
+}
+
 .lancamentos-header {
   display: flex;
   justify-content: space-between;
@@ -330,6 +366,9 @@
 
 .filter-row {
   margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .filter-select {
@@ -358,6 +397,57 @@
   transform: translateY(-50%);
   color: #607792;
   pointer-events: none;
+}
+
+.filter-input {
+  width: 180px;
+  height: 42px;
+  border: 1px solid #ced9e5;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #f8fbff;
+  color: #102b4f;
+  font-size: 16px;
+  outline: none;
+}
+
+.filter-input.date {
+  width: 160px;
+}
+
+.filter-input::placeholder {
+  color: #6c7f98;
+}
+
+.clear-button {
+  height: 42px;
+  border: 1px solid #cbd6e3;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #123566;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedback-message,
+.state-message {
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-weight: 600;
+}
+
+.feedback-message.error {
+  border: 1px solid #f4b8c2;
+  background: #fff0f2;
+  color: #c42f43;
+}
+
+.state-message {
+  margin-top: 14px;
+  background: #f3f7fc;
+  color: #516987;
 }
 
 .table-wrapper {
@@ -460,6 +550,162 @@ tbody tr:last-child td {
   color: #5f7795;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.finance-modal {
+  width: min(100%, 640px);
+  background: #ffffff;
+  border: 1px solid #cfd8e4;
+  border-radius: 12px;
+  padding: 22px 24px 24px;
+  box-shadow: 0 20px 44px rgba(9, 25, 50, 0.24);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #202c40;
+  font-size: 22px;
+}
+
+.close-button {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #5e6877;
+  cursor: pointer;
+}
+
+.close-button .mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.modal-form {
+  margin-top: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  color: #2e3b4f;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.form-field input,
+.form-select {
+  height: 42px;
+  border: 1px solid #ced7e3;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.form-field input {
+  padding: 0 12px;
+  color: #132e52;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-field input::placeholder {
+  color: #7f8ea2;
+}
+
+.form-select {
+  position: relative;
+}
+
+.form-select select {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 9px;
+  padding: 0 34px 0 12px;
+  color: #132e52;
+  font-size: 15px;
+  background: transparent;
+  outline: none;
+  appearance: none;
+}
+
+.form-select .mat-icon {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  color: #7a879b;
+  pointer-events: none;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.button-cancel,
+.button-save {
+  height: 42px;
+  border-radius: 10px;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-cancel {
+  border: 1px solid #c8d2de;
+  background: #ffffff;
+  color: #30435f;
+}
+
+.button-save {
+  border: 1px solid #143d75;
+  background: #123566;
+  color: #ffffff;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 @media (max-width: 1200px) {
   .metrics-grid {
     grid-template-columns: 1fr;
@@ -467,5 +713,20 @@ tbody tr:last-child td {
 
   .charts-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-modal {
+    padding: 18px;
+  }
+
+  .lancamentos-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

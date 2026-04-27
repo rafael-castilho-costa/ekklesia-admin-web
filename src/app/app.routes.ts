@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { LoginComponent } from './authentication/login.component';
-import { fullComponent } from './full/full.component';
+import { FullComponent } from './layout/full/full.component';
 
 export const routes: Routes = [
   {
@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: ':churchId',
-    component: fullComponent,
+    component: FullComponent,
     canActivate: [authGuard],
     children: [
       {
@@ -24,19 +24,34 @@ export const routes: Routes = [
         data: { title: 'Dashboard' }
       },
       {
-        path: 'membros',
-        loadComponent: () => import('./features/members/members-list.component').then(m => m.MembersListComponent),
+        path: 'members',
+        loadComponent: () => import('./features/members/members.component').then(m => m.MembersComponent),
         data: { title: 'Membros' }
       },
       {
+        path: 'membros',
+        redirectTo: 'members',
+        pathMatch: 'full'
+      },
+      {
+        path: 'finance',
+        loadComponent: () => import('./features/finance/finance.component').then(m => m.FinanceComponent),
+        data: { title: 'Financeiro' }
+      },
+      {
         path: 'agenda',
-        loadComponent: () => import('./agenda/agenda.component').then(m => m.AgendaComponent),
-        data: { title: 'Agenda' }
+        redirectTo: 'finance',
+        pathMatch: 'full'
+      },
+      {
+        path: 'visitors',
+        loadComponent: () => import('./features/visitors/visitors.component').then(m => m.VisitorsComponent),
+        data: { title: 'Visitantes' }
       },
       {
         path: 'visitantes',
-        loadComponent: () => import('./visitantes/visitantes.component').then(m => m.VisitantesComponent),
-        data: { title: 'Visitantes' }
+        redirectTo: 'visitors',
+        pathMatch: 'full'
       },
       {
         path: 'churches',

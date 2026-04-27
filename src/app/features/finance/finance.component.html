@@ -1,0 +1,237 @@
+<section class="finance-page">
+  <p *ngIf="pageErrorMessage" class="feedback-message error">{{ pageErrorMessage }}</p>
+
+  <div class="metrics-grid">
+    <article class="metric-card">
+      <div class="metric-title">
+        <mat-icon class="metric-icon entradas">arrow_circle_up</mat-icon>
+        <span>Entradas</span>
+      </div>
+      <strong>{{ formatarMoeda(totalEntradas) }}</strong>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-title">
+        <mat-icon class="metric-icon saidas">arrow_circle_down</mat-icon>
+        <span>Saidas</span>
+      </div>
+      <strong>{{ formatarMoeda(totalSaidas) }}</strong>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-title">
+        <mat-icon class="metric-icon saldo">attach_money</mat-icon>
+        <span>Saldo</span>
+      </div>
+      <strong class="saldo-value">{{ formatarMoeda(saldoAtual) }}</strong>
+    </article>
+  </div>
+
+  <div class="charts-grid">
+    <article class="panel">
+      <h2>Comparativo Mensal</h2>
+
+      <div class="bar-chart">
+        <div class="month-group" *ngFor="let item of comparativoMensal">
+          <div class="month-bars">
+            <span class="bar entradas" [style.height.%]="alturaBarra(item.entradas)"></span>
+            <span class="bar saidas" [style.height.%]="alturaBarra(item.saidas)"></span>
+          </div>
+          <span class="month-label">{{ item.mes }}</span>
+        </div>
+      </div>
+
+      <div class="chart-legend">
+        <span><i class="legend-color entradas"></i>Entradas</span>
+        <span><i class="legend-color saidas"></i>Saidas</span>
+      </div>
+    </article>
+
+    <article class="panel categories-panel">
+      <h2>Entradas por Categoria</h2>
+
+      <div class="donut-wrap">
+        <div class="donut-chart" [style.background]="donutGradient">
+          <div class="donut-hole"></div>
+        </div>
+
+        <div *ngIf="categoriasEntrada.length === 0" class="donut-empty">Sem entradas</div>
+
+        <div
+          *ngFor="let categoria of categoriasEntrada; let index = index"
+          class="donut-label"
+          [ngClass]="'label-' + index"
+          [style.color]="categoria.cor"
+        >
+          {{ categoria.nome }} {{ categoria.valor }}%
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel lancamentos-panel">
+    <header class="lancamentos-header">
+      <h2>Lancamentos</h2>
+
+      <button type="button" class="new-button" (click)="novoLancamento()">
+        <mat-icon>add</mat-icon>
+        Novo Lancamento
+      </button>
+    </header>
+
+    <div class="filter-row">
+      <div class="filter-select">
+        <select [(ngModel)]="filtroTipo" (ngModelChange)="onFiltroChange()">
+          <option value="todos">Todos</option>
+          <option value="INCOME">Entradas</option>
+          <option value="EXPENSE">Saidas</option>
+        </select>
+        <mat-icon>expand_more</mat-icon>
+      </div>
+
+      <input
+        class="filter-input"
+        [(ngModel)]="filtroCategoria"
+        (change)="onFiltroChange()"
+        type="text"
+        placeholder="Categoria"
+      >
+
+      <input
+        class="filter-input"
+        [(ngModel)]="filtroPagamento"
+        (change)="onFiltroChange()"
+        type="text"
+        placeholder="Pagamento"
+      >
+
+      <input
+        class="filter-input date"
+        [(ngModel)]="filtroDataInicio"
+        (change)="onFiltroChange()"
+        type="date"
+        aria-label="Data inicial"
+      >
+
+      <input
+        class="filter-input date"
+        [(ngModel)]="filtroDataFim"
+        (change)="onFiltroChange()"
+        type="date"
+        aria-label="Data final"
+      >
+
+      <button type="button" class="clear-button" (click)="limparFiltros()">Limpar</button>
+    </div>
+
+    <div *ngIf="isLoading" class="state-message">Carregando lancamentos...</div>
+
+    <div *ngIf="!isLoading" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Descricao</th>
+            <th>Categoria</th>
+            <th>Pagamento</th>
+            <th class="valor-col">Valor</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let lancamento of lancamentosFiltrados; trackBy: trackByLancamento">
+            <td>
+              <mat-icon [ngClass]="tipoClasse(lancamento.type)">{{ tipoIcone(lancamento.type) }}</mat-icon>
+            </td>
+            <td>
+              <div class="descricao-cell">
+                <strong>{{ lancamento.description }}</strong>
+                <span>{{ formatarData(lancamento.transactionDate) }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="category-tag" [ngClass]="categoriaClasse(lancamento.category)">{{ lancamento.category }}</span>
+            </td>
+            <td>{{ lancamento.paymentMethod }}</td>
+            <td class="valor-col" [ngClass]="tipoClasse(lancamento.type)">
+              {{ valorFormatado(lancamento.amount, lancamento.type) }}
+            </td>
+          </tr>
+
+          <tr *ngIf="lancamentosFiltrados.length === 0">
+            <td colspan="5" class="empty-state">Nenhum lancamento encontrado para este filtro.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<div *ngIf="isModalOpen" class="modal-overlay">
+  <section class="finance-modal">
+    <header class="modal-header">
+      <h3>Novo Lancamento</h3>
+      <button type="button" class="close-button" (click)="fecharModal()" [disabled]="isSubmitting">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <form class="modal-form" [formGroup]="launchForm" (ngSubmit)="salvarLancamento()">
+      <p *ngIf="submitErrorMessage" class="feedback-message error">{{ submitErrorMessage }}</p>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="type">Tipo</label>
+          <div class="form-select">
+            <select id="type" formControlName="type">
+              <option value="INCOME">Entrada</option>
+              <option value="EXPENSE">Saida</option>
+            </select>
+            <mat-icon>expand_more</mat-icon>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="category">Categoria</label>
+          <input id="category" formControlName="category" type="text" placeholder="Ex: Dizimos">
+        </div>
+      </div>
+
+      <div class="form-field full-width">
+        <label for="description">Descricao</label>
+        <input id="description" formControlName="description" type="text" placeholder="Descricao do lancamento">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="amount">Valor (R$)</label>
+          <input id="amount" formControlName="amount" type="number" min="0.01" step="0.01" placeholder="0,00">
+        </div>
+
+        <div class="form-field">
+          <label for="transactionDate">Data</label>
+          <input id="transactionDate" formControlName="transactionDate" type="date">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="paymentMethod">Forma de pagamento</label>
+          <input id="paymentMethod" formControlName="paymentMethod" type="text" placeholder="Ex: PIX">
+        </div>
+
+        <div class="form-field">
+          <label for="notes">Observacoes</label>
+          <input id="notes" formControlName="notes" type="text" placeholder="Opcional">
+        </div>
+      </div>
+
+      <footer class="modal-actions">
+        <button type="button" class="button-cancel" (click)="fecharModal()" [disabled]="isSubmitting">Cancelar</button>
+        <button type="submit" class="button-save" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

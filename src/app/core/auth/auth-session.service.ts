@@ -31,13 +31,38 @@ export class AuthSessionService {
   }
 
   getAccessToken(): string | null {
-    const token = this.sessionSubject.value?.accessToken ?? null;
-    if (token) {
-      console.log(`[AuthSessionService] ✅ Token recuperado: ${token.substring(0, 20)}...`);
-    } else {
-      console.log(`[AuthSessionService] ❌ Nenhum token em memória`);
+    return this.sessionSubject.value?.accessToken ?? null;
+  }
+
+  getChurchId(): number | null {
+    const sessionChurchId = this.sessionSubject.value?.user?.churchId;
+    if (typeof sessionChurchId === 'number' && Number.isFinite(sessionChurchId)) {
+      return sessionChurchId;
     }
-    return token;
+
+    const token = this.sessionSubject.value?.accessToken;
+    if (!token) {
+      return null;
+    }
+
+    const payload = this.decodeJwtPayload(token);
+    const claim = payload?.['churchId'] ?? payload?.['church_id'];
+
+    if (typeof claim === 'number' && Number.isFinite(claim)) {
+      return claim;
+    }
+
+    if (typeof claim === 'string' && claim.trim().length > 0) {
+      const parsed = Number.parseInt(claim, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  }
+
+  getChurchIdHeaderValue(): string | null {
+    const churchId = this.getChurchId();
+    return churchId === null ? null : String(churchId);
   }
 
   isAuthenticated(): boolean {
@@ -45,10 +70,8 @@ export class AuthSessionService {
   }
 
   setSession(session: AuthSession): void {
-    console.log(`[AuthSessionService] 💾 Salvando sessão com token: ${session.accessToken.substring(0, 20)}...`);
     this.sessionSubject.next(session);
     this.persistSession(session);
-    console.log(`[AuthSessionService] ✅ Sessão salva em memória e localStorage`);
   }
 
   clearSession(): void {
@@ -67,50 +90,69 @@ export class AuthSessionService {
 
   private readSessionFromStorage(): AuthSession | null {
     if (!isPlatformBrowser(this.platformId)) {
-      console.log(`[AuthSessionService] ⚠️ Não está no navegador - localStorage indisponível`);
       return null;
     }
 
     try {
       const rawSession = localStorage.getItem(AuthSessionService.STORAGE_KEY);
       if (!rawSession) {
-        console.log(`[AuthSessionService] ℹ️ Nenhuma sessão encontrada no localStorage`);
         return null;
       }
 
-      console.log(`[AuthSessionService] 📦 Sessão encontrada no localStorage`);
       const parsedSession = JSON.parse(rawSession) as Partial<AuthSession>;
       if (!parsedSession.accessToken || typeof parsedSession.accessToken !== 'string') {
-        console.log(`[AuthSessionService] ⚠️ Sessão do localStorage inválida (sem token)`);
         return null;
       }
 
-      console.log(`[AuthSessionService] ✅ Sessão carregada do localStorage com token: ${parsedSession.accessToken.substring(0, 20)}...`);
       return {
         accessToken: parsedSession.accessToken,
         refreshToken: parsedSession.refreshToken,
         expiresAt: parsedSession.expiresAt,
         user: parsedSession.user
       };
-    } catch (error) {
-      console.error(`[AuthSessionService] ❌ Erro ao ler localStorage:`, error);
+    } catch {
       return null;
     }
   }
 
   private persistSession(session: AuthSession): void {
     if (!isPlatformBrowser(this.platformId)) {
-      console.log(`[AuthSessionService] ⚠️ Não está no navegador - localStorage indisponível`);
       return;
     }
 
     try {
-      const sessionJson = JSON.stringify(session);
-      localStorage.setItem(AuthSessionService.STORAGE_KEY, sessionJson);
-      console.log(`[AuthSessionService] 💾 Sessão persistida em localStorage com chave: ${AuthSessionService.STORAGE_KEY}`);
-    } catch (error) {
-      console.error(`[AuthSessionService] ❌ Erro ao salvar em localStorage:`, error);
+      localStorage.setItem(AuthSessionService.STORAGE_KEY, JSON.stringify(session));
+    } catch {
       // ignore browser storage failures
+    }
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    if (!isPlatformBrowser(this.platformId)) {
+      return null;
+    }
+
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const normalizedPayload = parts[1]
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
+        .padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
+
+      const decodedPayload = atob(normalizedPayload);
+      const utf8Payload = decodeURIComponent(
+        Array.from(decodedPayload)
+          .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+          .join('')
+      );
+
+      return JSON.parse(utf8Payload) as Record<string, unknown>;
+    } catch {
+      return null;
     }
   }
 }

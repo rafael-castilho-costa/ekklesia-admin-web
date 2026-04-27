@@ -2,7 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Persona, PersonaRequest } from '../../shared/models/api.models';
+import {
+  Persona,
+  PersonaRelationship,
+  PersonaRelationshipRequest,
+  PersonaRequest
+} from '../../shared/models/api.models';
 
 @Injectable({
   providedIn: 'root'
@@ -30,5 +35,9 @@ export class PersonasApiService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  createRelationship(request: PersonaRelationshipRequest): Observable<PersonaRelationship> {
+    return this.http.post<PersonaRelationship>(`${this.apiUrl}/relationships`, request);
   }
 }

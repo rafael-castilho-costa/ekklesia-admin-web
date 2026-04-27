@@ -9,11 +9,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { isPlatformBrowser, CommonModule } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { TenantContextService } from "../core/tenant/tenant-context.service";
-import { AuthSessionService } from "../core/auth/auth-session.service";
+import { TenantContextService } from "../../core/tenant/tenant-context.service";
+import { AuthSessionService } from "../../core/auth/auth-session.service";
 import { NavigationEnd } from '@angular/router';
 import { filter, startWith, map, Observable } from 'rxjs';
-import { AuthService } from "../core/auth/auth.service";
+import { AuthService } from "../../core/auth/auth.service";
 
 @Component({
   standalone: true,
@@ -30,18 +30,18 @@ import { AuthService } from "../core/auth/auth.service";
     RouterLinkActive,
     CommonModule
   ],
-  templateUrl: 'full.component.html',
-  styleUrls: ['full.component.css']
+  templateUrl: './full.component.html',
+  styleUrls: ['./full.component.css']
 })
-export class fullComponent implements OnInit {
-  isOpened = true;
-  pageTitle = 'Dashboard';
-  readonly defaultChurchId = TenantContextService.DEFAULT_CHURCH_ID;
-  churchId = this.tenantContext.getChurchId() ?? this.defaultChurchId;
-  churchName$!: Observable<string>;
-
+export class FullComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authSessionService = inject(AuthSessionService);
+
+  isOpened = true;
+  pageTitle = 'Dashboard';
+  readonly defaultChurchId = this.authSessionService.getChurchIdHeaderValue() ?? TenantContextService.DEFAULT_CHURCH_ID;
+  churchId = this.tenantContext.getChurchId() ?? this.defaultChurchId;
+  churchName$!: Observable<string>;
 
   constructor(
     private router: Router,

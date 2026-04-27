@@ -27,7 +27,8 @@ export interface AuthLoginResponse {
 }
 
 export interface AuthMeResponse {
-  userId: number;
+  id: number;
+  userId?: number;
   email: string;
   name: string;
   personaId: number;
@@ -37,7 +38,8 @@ export interface AuthMeResponse {
 }
 
 export interface SessionUser {
-  userId: number;
+  id: number;
+  userId?: number;
   email: string;
   name: string;
   personaId: number;
@@ -71,26 +73,40 @@ export interface ChurchRequest {
 export interface Persona {
   id: number;
   churchId: number;
+  churchName?: string;
   personaType: string;
   taxId: string;
   name: string;
-  birthDate: string;
-  maritalStatus: string;
-  phone: string;
-  email: string;
-  address: string;
+  birthDate: string | null;
+  maritalStatus: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
 }
 
 export interface PersonaRequest {
-  churchId: number;
   personaType: string;
   taxId: string;
   name: string;
-  birthDate: string;
-  maritalStatus: string;
-  phone: string;
-  email: string;
-  address: string;
+  churchId?: number;
+  birthDate?: string | null;
+  maritalStatus?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+}
+
+export interface PersonaRelationship {
+  id: number;
+  personaId: number;
+  relatedPersonaId: number;
+  relationshipType: string;
+}
+
+export interface PersonaRelationshipRequest {
+  personaId: number;
+  relatedPersonaId: number;
+  relationshipType: string;
 }
 
 /**
@@ -99,23 +115,49 @@ export interface PersonaRequest {
 export interface Member {
   id: number;
   personaId: number;
-  persona?: Persona;
-  membershipDate: string;
-  baptismDate: string;
-  baptized: boolean;
-  ministry: string;
+  persona: Persona;
+  membershipDate: string | null;
+  baptismDate: string | null;
+  baptized: boolean | null;
+  ministry: string | null;
   statusMember: string;
-  notes: string;
+  notes: string | null;
 }
 
 export interface MemberRequest {
   personaId: number;
-  membershipDate: string;
-  baptismDate: string;
-  baptized: boolean;
-  ministry: string;
+  membershipDate?: string | null;
+  baptismDate?: string | null;
+  baptized?: boolean | null;
+  ministry?: string | null;
   statusMember: string;
-  notes: string;
+  notes?: string | null;
+}
+
+/**
+ * Finance Models
+ */
+export type FinanceTransactionType = 'INCOME' | 'EXPENSE';
+
+export interface FinanceTransaction {
+  id: number;
+  type: FinanceTransactionType;
+  description: string;
+  category: string;
+  paymentMethod: string;
+  amount: number;
+  transactionDate: string;
+  notes?: string | null;
+}
+
+export interface FinanceTransactionRequest {
+  type: FinanceTransactionType;
+  description: string;
+  category: string;
+  paymentMethod: string;
+  amount: number;
+  transactionDate: string;
+  notes?: string | null;
 }
 
 /**

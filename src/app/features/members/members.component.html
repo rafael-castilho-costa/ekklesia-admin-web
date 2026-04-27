@@ -1,0 +1,287 @@
+<section class="members-page">
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Ativos</span>
+      <strong>{{ totalActive }}</strong>
+    </article>
+
+    <article class="summary-card">
+      <span>Visitantes</span>
+      <strong>{{ totalVisitors }}</strong>
+    </article>
+
+    <article class="summary-card">
+      <span>Inativos</span>
+      <strong>{{ totalInactive }}</strong>
+    </article>
+  </div>
+
+  <section class="table-panel">
+    <header class="panel-header">
+      <div class="panel-title">
+        <mat-icon>group</mat-icon>
+        <h2>Lista de Membros</h2>
+      </div>
+
+      <button type="button" class="new-member-button" (click)="novoMembro()">
+        <mat-icon>add</mat-icon>
+        Novo Membro
+      </button>
+    </header>
+
+    <p *ngIf="successMessage" class="feedback-message success">
+      {{ successMessage }}
+    </p>
+
+    <p *ngIf="pageErrorMessage" class="feedback-message error">
+      {{ pageErrorMessage }}
+    </p>
+
+    <div class="filters-row">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Buscar por nome ou ministerio..."
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearchTermChange($event)"
+        >
+      </div>
+
+      <div class="filter-select">
+        <select [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
+          <option value="">Todos os status</option>
+          <option *ngFor="let option of memberStatuses" [value]="option.value">
+            {{ option.description }}
+          </option>
+        </select>
+        <mat-icon>expand_more</mat-icon>
+      </div>
+    </div>
+
+    <div *ngIf="isInitialLoading || isLoadingMembers" class="state-message">
+      Carregando membros...
+    </div>
+
+    <div *ngIf="!isInitialLoading && !isLoadingMembers" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Estado Civil</th>
+            <th>Ministerio</th>
+            <th>Status</th>
+            <th>Membresia</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let membro of members; trackBy: trackByMember">
+            <td>{{ membro.persona.name }}</td>
+            <td>{{ membro.persona.email || '-' }}</td>
+            <td>{{ membro.persona.phone || '-' }}</td>
+            <td>{{ getMaritalStatusLabel(membro.persona.maritalStatus) }}</td>
+            <td>{{ getMinistryLabel(membro.ministry) }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="statusClass(membro.statusMember)">
+                {{ getStatusLabel(membro.statusMember) }}
+              </span>
+            </td>
+            <td>{{ formatDate(membro.membershipDate) }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="icon-button" (click)="editarMembro(membro)" aria-label="Editar membro">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button type="button" class="icon-button danger" (click)="removerMembro(membro)" aria-label="Remover membro">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="members.length === 0">
+            <td colspan="8" class="empty-state">Nenhum membro encontrado para o filtro informado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="fecharModalAoClicarFora($event)">
+  <section class="member-modal" role="dialog" aria-modal="true" aria-labelledby="member-modal-title">
+    <header class="modal-header">
+      <h3 id="member-modal-title">{{ modalTitle }}</h3>
+      <button type="button" class="close-button" (click)="fecharModal()" [disabled]="isSubmitting" aria-label="Fechar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <div *ngIf="isLoadingModalData" class="state-message">
+      Carregando dados do membro...
+    </div>
+
+    <form *ngIf="!isLoadingModalData" class="modal-form" [formGroup]="memberForm" (ngSubmit)="salvarNovoMembro()">
+      <p *ngIf="submitErrorMessage" class="feedback-message error">
+        {{ submitErrorMessage }}
+      </p>
+
+      <div class="section-title">Dados da Pessoa</div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="personaType">Tipo de pessoa *</label>
+          <div class="form-select">
+            <select id="personaType" formControlName="personaType">
+              <option value="">Selecione</option>
+              <option *ngFor="let option of personaTypes" [value]="option.value">{{ option.description }}</option>
+            </select>
+            <mat-icon>expand_more</mat-icon>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="taxId">CPF/CNPJ *</label>
+          <input id="taxId" formControlName="taxId" type="text" placeholder="Documento da pessoa">
+        </div>
+      </div>
+
+      <div class="form-field full-width">
+        <label for="name">Nome *</label>
+        <input id="name" formControlName="name" type="text" placeholder="Nome completo">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="birthDate">Data de nascimento</label>
+          <input id="birthDate" formControlName="birthDate" type="date">
+        </div>
+
+        <div class="form-field">
+          <label for="maritalStatus">Estado civil</label>
+          <div class="form-select">
+            <select id="maritalStatus" formControlName="maritalStatus">
+              <option value="">Selecione</option>
+              <option *ngFor="let option of maritalStatuses" [value]="option.value">{{ option.description }}</option>
+            </select>
+            <mat-icon>expand_more</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="phone">Telefone</label>
+          <input id="phone" formControlName="phone" type="text" placeholder="62999999999">
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input id="email" formControlName="email" type="email" placeholder="maria@ekklesia.com">
+        </div>
+      </div>
+
+      <div class="form-field full-width">
+        <label for="address">Endereco</label>
+        <input id="address" formControlName="address" type="text" placeholder="Rua A">
+      </div>
+
+      <fieldset *ngIf="showSpouseFields" class="spouse-fieldset">
+        <legend>Conjuge</legend>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="spouseTaxId">CPF *</label>
+            <input id="spouseTaxId" formControlName="spouseTaxId" type="text" placeholder="Documento do conjuge">
+          </div>
+
+          <div class="form-field">
+            <label for="spouseBirthDate">Data de nascimento</label>
+            <input id="spouseBirthDate" formControlName="spouseBirthDate" type="date">
+          </div>
+        </div>
+
+        <div class="form-field full-width">
+          <label for="spouseName">Nome *</label>
+          <input id="spouseName" formControlName="spouseName" type="text" placeholder="Nome completo do conjuge">
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="spousePhone">Telefone</label>
+            <input id="spousePhone" formControlName="spousePhone" type="text" placeholder="62999999999">
+          </div>
+
+          <div class="form-field">
+            <label for="spouseEmail">Email</label>
+            <input id="spouseEmail" formControlName="spouseEmail" type="email" placeholder="conjuge@ekklesia.com">
+          </div>
+        </div>
+
+        <div class="form-field full-width">
+          <label for="spouseAddress">Endereco</label>
+          <input id="spouseAddress" formControlName="spouseAddress" type="text" placeholder="Usa o endereco da pessoa se ficar vazio">
+        </div>
+      </fieldset>
+
+      <div class="section-title">Dados do Membro</div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="membershipDate">Data de membresia</label>
+          <input id="membershipDate" formControlName="membershipDate" type="date">
+        </div>
+
+        <div class="form-field">
+          <label for="baptismDate">Data de batismo</label>
+          <input id="baptismDate" formControlName="baptismDate" type="date">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="ministry">Ministerio</label>
+          <div class="form-select">
+            <select id="ministry" formControlName="ministry">
+              <option value="">Selecione</option>
+              <option *ngFor="let option of ministries" [value]="option.value">{{ option.description }}</option>
+            </select>
+            <mat-icon>expand_more</mat-icon>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="statusMember">Status *</label>
+          <div class="form-select">
+            <select id="statusMember" formControlName="statusMember">
+              <option value="">Selecione</option>
+              <option *ngFor="let option of memberStatuses" [value]="option.value">{{ option.description }}</option>
+            </select>
+            <mat-icon>expand_more</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <label class="checkbox-row">
+        <input formControlName="baptized" type="checkbox">
+        <span>Batizado</span>
+      </label>
+
+      <div class="form-field full-width">
+        <label for="notes">Observacoes</label>
+        <textarea id="notes" formControlName="notes" rows="4" placeholder="Membro cadastrado via tela"></textarea>
+      </div>
+
+      <footer class="modal-actions">
+        <button type="button" class="button-cancel" (click)="fecharModal()" [disabled]="isSubmitting">Cancelar</button>
+        <button type="submit" class="button-save" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

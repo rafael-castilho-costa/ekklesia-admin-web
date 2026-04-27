@@ -205,7 +205,7 @@ export class PersonasListComponent implements OnInit {
     const term = this.searchTerm.toLowerCase();
     this.filteredPersonas = this.personas.filter(persona =>
       persona.name.toLowerCase().includes(term) ||
-      persona.email.toLowerCase().includes(term)
+      (persona.email ?? '').toLowerCase().includes(term)
     );
   }
 

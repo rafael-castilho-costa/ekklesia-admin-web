@@ -1,21 +1,19 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient, withInterceptors, withFetch, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { authInterceptor } from './core/interceptors/auth.interceptor.fn';
+import { churchIdInterceptor } from './core/tenant/church-id.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideClientHydration(),
-    provideAnimationsAsync(),
+    provideAnimations(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor]) // ✅ Novo interceptor funcional
+      withInterceptors([authInterceptor, churchIdInterceptor])
     )
   ]
 };
-
