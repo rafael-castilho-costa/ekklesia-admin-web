@@ -8,12 +8,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { isPlatformBrowser, CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { TenantContextService } from "../../core/tenant/tenant-context.service";
 import { AuthSessionService } from "../../core/auth/auth-session.service";
 import { NavigationEnd } from '@angular/router';
 import { filter, startWith, map, Observable } from 'rxjs';
 import { AuthService } from "../../core/auth/auth.service";
+import { AdminChurchesApiService } from "../../core/api/admin-churches-api.service";
+import { AuthMeResponse, Church } from "../../shared/models/api.models";
 
 @Component({
   standalone: true,
@@ -28,7 +31,8 @@ import { AuthService } from "../../core/auth/auth.service";
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    CommonModule
+    CommonModule,
+    FormsModule
   ],
   templateUrl: './full.component.html',
   styleUrls: ['./full.component.css']
@@ -41,23 +45,37 @@ export class FullComponent implements OnInit {
   pageTitle = 'Dashboard';
   readonly defaultChurchId = this.authSessionService.getChurchIdHeaderValue() ?? TenantContextService.DEFAULT_CHURCH_ID;
   churchId = this.tenantContext.getChurchId() ?? this.defaultChurchId;
+  isAdminArea = false;
+  adminChurchId = this.authSessionService.getAdminChurchId() ?? '';
+  adminChurches: Church[] = [];
   churchName$!: Observable<string>;
+  currentUser$!: Observable<AuthMeResponse | null>;
+  isAdminMaster$!: Observable<boolean>;
 
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private tenantContext: TenantContextService,
     private authService: AuthService,
+    private adminChurchesApiService: AdminChurchesApiService,
     @Inject(PLATFORM_ID) private platformId: object
   ) {}
 
   ngOnInit(): void {
+    this.currentUser$ = this.authSessionService.session$.pipe(
+      map(session => session?.user ?? null)
+    );
     this.churchName$ = this.authSessionService.session$.pipe(
-      map(session => session?.user?.churchName || 'Igreja Evangelica')
+      map(session => session?.user?.adminMaster ? 'Administração' : (session?.user?.churchName || 'Igreja Evangelica'))
+    );
+    this.isAdminMaster$ = this.authSessionService.session$.pipe(
+      map(() => this.authSessionService.isAdminMaster())
     );
     this.updateViewportMode();
+    this.watchAdminArea();
     this.watchChurchIdFromRoute();
     this.watchPageTitle();
+    this.loadAdminChurches();
   }
 
   @HostListener('window:resize')
@@ -76,10 +94,43 @@ export class FullComponent implements OnInit {
     return ['/', this.churchId || this.defaultChurchId, path];
   }
 
+  adminLink(path: string): string[] {
+    return ['/admin', path];
+  }
+
+  onAdminChurchContextChange(churchId: string): void {
+    this.adminChurchId = churchId;
+    this.authSessionService.setAdminChurchId(churchId || null);
+  }
+
   logout(): void {
     this.authService.logout();
     this.tenantContext.clearChurchId();
     this.router.navigate(['/login']);
+  }
+
+  userInitials(user: AuthMeResponse | null): string {
+    if (!user?.name) {
+      return 'AD';
+    }
+
+    const parts = user.name.trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? '';
+    const second = parts.length > 1 ? parts[parts.length - 1][0] : parts[0]?.[1] ?? '';
+
+    return `${first}${second}`.toUpperCase();
+  }
+
+  roleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      ROLE_ADMIN: 'Administrador',
+      ROLE_SECRETARY: 'Secretaria',
+      ROLE_TREASURER: 'Tesouraria',
+      ROLE_MEMBER: 'Membro',
+      ROLE_ADMIN_MASTER: 'Admin Master'
+    };
+
+    return labels[role] ?? role.replace(/^ROLE_/, '').replace(/_/g, ' ');
   }
 
   private watchChurchIdFromRoute(): void {
@@ -98,6 +149,18 @@ export class FullComponent implements OnInit {
 
         this.churchId = resolvedChurchId;
         this.tenantContext.setChurchId(resolvedChurchId);
+      });
+  }
+
+  private watchAdminArea(): void {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        startWith(null),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.isAdminArea = this.router.url.startsWith('/admin');
       });
   }
 
@@ -122,5 +185,16 @@ export class FullComponent implements OnInit {
     }
 
     return currentRoute;
+  }
+
+  private loadAdminChurches(): void {
+    if (!this.authSessionService.isAdminMaster()) {
+      return;
+    }
+
+    this.adminChurchesApiService.getAll().subscribe({
+      next: (churches) => (this.adminChurches = churches),
+      error: () => (this.adminChurches = [])
+    });
   }
 }

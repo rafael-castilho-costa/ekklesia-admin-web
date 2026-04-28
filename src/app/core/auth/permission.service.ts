@@ -22,6 +22,10 @@ export class PermissionService {
     return this.hasRole(RoleEnum.ROLE_SECRETARY);
   }
 
+  isAdminMaster(): boolean {
+    return this.authSessionService.isAdminMaster();
+  }
+
   /**
    * Verifica se o usuário tem um role específico
    */
@@ -63,5 +67,9 @@ export class PermissionService {
    */
   canDelete(): boolean {
     return this.isAdmin();
+  }
+
+  canAccessAdministration(): boolean {
+    return this.isAdminMaster();
   }
 }

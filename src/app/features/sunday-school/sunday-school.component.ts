@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   standalone: true,
-  selector: 'app-visitors',
-  templateUrl: './visitors.component.html',
-  styleUrls: ['./visitors.component.css'],
+  selector: 'app-sunday-school',
+  templateUrl: './sunday-school.component.html',
+  styleUrls: ['./sunday-school.component.css'],
   imports: [CommonModule]
 })
-export class VisitorsComponent implements OnInit {
+export class SundaySchoolComponent implements OnInit {
 
   constructor() { }
 

@@ -1,0 +1,291 @@
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-header,
+.admin-panel-header,
+.admin-actions,
+.row-actions,
+.modal-actions {
+  display: flex;
+  align-items: center;
+}
+
+.admin-header {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-header h2,
+.modal-header h3 {
+  margin: 0;
+  color: #0e2241;
+}
+
+.admin-header h2 {
+  font-size: 28px;
+}
+
+.admin-header p {
+  margin: 4px 0 0;
+  color: #5d7392;
+  font-size: 14px;
+}
+
+.admin-panel {
+  background: #ffffff;
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.admin-panel-header {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d0d9e4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fbff;
+}
+
+.search-box input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #102b4f;
+  font-size: 15px;
+  outline: none;
+}
+
+.admin-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #d0d9e4;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 13px 14px;
+  border-bottom: 1px solid #e0e7f1;
+  color: #102b4f;
+  font-size: 14px;
+}
+
+th {
+  background: #f4f8fc;
+  color: #536b89;
+  font-weight: 700;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.row-actions {
+  gap: 6px;
+}
+
+.empty-state,
+.state-message {
+  text-align: center;
+  color: #5d7593;
+  padding: 28px;
+}
+
+.admin-button,
+.secondary-button,
+.danger-button,
+.icon-action {
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.admin-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #173766;
+  color: #ffffff;
+}
+
+.secondary-button {
+  padding: 10px 14px;
+  background: #f0f2f5;
+  color: #293241;
+}
+
+.danger-button {
+  padding: 10px 14px;
+  background: #fbe9ec;
+  color: #b42335;
+}
+
+.icon-action {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef3f8;
+  color: #173766;
+}
+
+.icon-action.danger {
+  background: #fbe9ec;
+  color: #b42335;
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  background: rgba(9, 25, 47, 0.45);
+  overflow-y: auto;
+}
+
+.admin-modal {
+  width: min(760px, 100%);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 22px 55px rgba(14, 34, 65, 0.28);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e0e7f1;
+}
+
+.admin-form {
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  color: #293241;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field select {
+  padding: 10px 12px;
+  border: 1px solid #d4dce6;
+  border-radius: 8px;
+  background: #f6f8fb;
+  color: #0f172a;
+  font: inherit;
+  outline: none;
+}
+
+.form-field input:disabled,
+.form-field select:disabled {
+  color: #7a8798;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: #b42335;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.role-option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #d4dce6;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #e8f2ff;
+  color: #173766;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pill.warn {
+  background: #fbe9ec;
+  color: #b42335;
+}
+
+@media (max-width: 760px) {
+  .admin-header,
+  .admin-panel-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-button,
+  .secondary-button,
+  .danger-button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .form-grid,
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+}

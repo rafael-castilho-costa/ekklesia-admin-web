@@ -27,27 +27,33 @@ export interface AuthLoginResponse {
 }
 
 export interface AuthMeResponse {
-  id: number;
-  userId?: number;
+  id?: number;
+  userId: number;
   email: string;
   name: string;
   personaId: number;
-  churchId: number;
-  churchName: string;
+  churchId: number | null;
+  churchName: string | null;
   roles: string[];
+  scope: UserScope;
+  adminMaster: boolean;
 }
 
 export interface SessionUser {
-  id: number;
-  userId?: number;
+  id?: number;
+  userId: number;
   email: string;
   name: string;
   personaId: number;
-  churchId: number;
-  churchName: string;
+  churchId: number | null;
+  churchName: string | null;
   roles: string[];
+  scope: UserScope;
+  adminMaster: boolean;
   token: string;
 }
+
+export type UserScope = 'TENANT' | 'PLATFORM';
 
 /**
  * Churches Models
@@ -94,6 +100,35 @@ export interface PersonaRequest {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
+}
+
+/**
+ * Admin Models
+ */
+export interface AdminUser {
+  id: number;
+  userId?: number;
+  email: string;
+  name: string;
+  personaId?: number | null;
+  churchId?: number | null;
+  churchName?: string | null;
+  roles: string[];
+  scope: UserScope;
+  adminMaster?: boolean;
+  blocked?: boolean;
+  enabled?: boolean;
+  active?: boolean;
+}
+
+export interface AdminUserRequest {
+  email: string;
+  name: string;
+  password?: string | null;
+  personaId?: number | null;
+  churchId?: number | null;
+  roles: string[];
+  scope: UserScope;
 }
 
 export interface PersonaRelationship {
@@ -203,5 +238,8 @@ export enum MemberStatusEnum {
 
 export enum RoleEnum {
   ROLE_ADMIN = 'ROLE_ADMIN',
-  ROLE_SECRETARY = 'ROLE_SECRETARY'
+  ROLE_SECRETARY = 'ROLE_SECRETARY',
+  ROLE_TREASURER = 'ROLE_TREASURER',
+  ROLE_MEMBER = 'ROLE_MEMBER',
+  ROLE_ADMIN_MASTER = 'ROLE_ADMIN_MASTER'
 }

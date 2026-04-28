@@ -120,6 +120,10 @@ export class MembersComponent implements OnInit {
     return !this.editingMember && this.memberForm.controls.maritalStatus.value === 'CASADO';
   }
 
+  get isVisitorStatus(): boolean {
+    return this.memberForm.controls.statusMember.value === 'VISITOR';
+  }
+
   onSearchTermChange(value: string): void {
     this.searchTerm = value;
     this.searchSubject.next(value);
@@ -155,6 +159,7 @@ export class MembersComponent implements OnInit {
       spouseEmail: '',
       spouseAddress: ''
     });
+    this.configureTaxIdValidators();
     this.configureSpouseValidators();
     this.memberForm.markAsPristine();
     this.memberForm.markAsUntouched();
@@ -195,6 +200,7 @@ export class MembersComponent implements OnInit {
             spouseEmail: '',
             spouseAddress: ''
           });
+          this.configureTaxIdValidators();
           this.configureSpouseValidators();
         },
         error: (error) => {
@@ -246,6 +252,7 @@ export class MembersComponent implements OnInit {
   salvarNovoMembro(): void {
     this.submitErrorMessage = null;
     this.successMessage = null;
+    this.configureTaxIdValidators();
     this.configureSpouseValidators();
 
     if (this.memberForm.invalid) {
@@ -343,6 +350,10 @@ export class MembersComponent implements OnInit {
     this.memberForm.controls.maritalStatus.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.configureSpouseValidators());
+
+    this.memberForm.controls.statusMember.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.configureTaxIdValidators());
   }
 
   private initializePage(): void {
@@ -495,6 +506,12 @@ export class MembersComponent implements OnInit {
     spouseName.setValidators(requiredWhenMarried);
     spouseTaxId.updateValueAndValidity({ emitEvent: false });
     spouseName.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private configureTaxIdValidators(): void {
+    const taxId = this.memberForm.controls.taxId;
+    taxId.setValidators(this.isVisitorStatus ? [] : [Validators.required]);
+    taxId.updateValueAndValidity({ emitEvent: false });
   }
 
   private normalizeOptionalValue(value: string | null | undefined): string | null {

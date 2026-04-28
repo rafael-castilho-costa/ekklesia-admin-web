@@ -11,6 +11,22 @@ export const churchIdInterceptor: HttpInterceptorFn = (request, next) => {
     return next(request);
   }
 
+  if (isAdminRequest(request.url)) {
+    const adminChurchId = authSessionService.getAdminChurchId();
+
+    if (!adminChurchId) {
+      return next(request);
+    }
+
+    return next(
+      request.clone({
+        setHeaders: {
+          'X-Church-Id': adminChurchId
+        }
+      })
+    );
+  }
+
   const churchId =
     tenantContext.getChurchId() ??
     authSessionService.getChurchIdHeaderValue();
@@ -29,3 +45,7 @@ export const churchIdInterceptor: HttpInterceptorFn = (request, next) => {
     })
   );
 };
+
+function isAdminRequest(url: string): boolean {
+  return /\/admin(?:\/|$)/.test(url);
+}

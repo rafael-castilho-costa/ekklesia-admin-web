@@ -1,6 +1,6 @@
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest, map } from 'rxjs';
 import { AuthMeResponse } from '../../shared/models/api.models';
 
 export interface AuthSession {
@@ -15,14 +15,29 @@ export interface AuthSession {
 })
 export class AuthSessionService {
   private static readonly STORAGE_KEY = 'ekklesia.auth.session';
+  private static readonly ADMIN_CHURCH_CONTEXT_KEY = 'ekklesia.admin.churchId';
 
   private readonly sessionSubject = new BehaviorSubject<AuthSession | null>(null);
+  private readonly adminChurchIdSubject = new BehaviorSubject<string | null>(null);
   readonly session$ = this.sessionSubject.asObservable();
+  readonly adminChurchId$ = this.adminChurchIdSubject.asObservable();
+  readonly user$ = this.session$.pipe(map((session) => session?.user ?? null));
+  readonly isAdminMaster$ = this.user$.pipe(
+    map((user) => !!user?.adminMaster || user?.roles.includes('ROLE_ADMIN_MASTER') === true)
+  );
+  readonly activeChurchId$ = combineLatest([this.session$, this.adminChurchId$]).pipe(
+    map(() => this.getActiveChurchId())
+  );
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {
     const storedSession = this.readSessionFromStorage();
     if (storedSession) {
       this.sessionSubject.next(storedSession);
+    }
+
+    const storedAdminChurchId = this.readAdminChurchIdFromStorage();
+    if (storedAdminChurchId) {
+      this.adminChurchIdSubject.next(storedAdminChurchId);
     }
   }
 
@@ -32,6 +47,46 @@ export class AuthSessionService {
 
   getAccessToken(): string | null {
     return this.sessionSubject.value?.accessToken ?? null;
+  }
+
+  getAuthenticatedUser(): AuthMeResponse | null {
+    return this.sessionSubject.value?.user ?? null;
+  }
+
+  isAdminMaster(): boolean {
+    const user = this.getAuthenticatedUser();
+    return !!user?.adminMaster || user?.roles.includes('ROLE_ADMIN_MASTER') === true;
+  }
+
+  getAdminChurchId(): string | null {
+    return this.adminChurchIdSubject.value;
+  }
+
+  setAdminChurchId(churchId: string | number | null | undefined): void {
+    const normalizedChurchId = this.normalizeChurchId(churchId);
+    this.adminChurchIdSubject.next(normalizedChurchId);
+
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    try {
+      if (normalizedChurchId) {
+        localStorage.setItem(AuthSessionService.ADMIN_CHURCH_CONTEXT_KEY, normalizedChurchId);
+      } else {
+        localStorage.removeItem(AuthSessionService.ADMIN_CHURCH_CONTEXT_KEY);
+      }
+    } catch {
+      // ignore browser storage failures
+    }
+  }
+
+  clearAdminChurchId(): void {
+    this.setAdminChurchId(null);
+  }
+
+  getActiveChurchId(): string | null {
+    return this.getAdminChurchId() ?? this.getChurchIdHeaderValue();
   }
 
   getChurchId(): number | null {
@@ -76,6 +131,7 @@ export class AuthSessionService {
 
   clearSession(): void {
     this.sessionSubject.next(null);
+    this.adminChurchIdSubject.next(null);
 
     if (!isPlatformBrowser(this.platformId)) {
       return;
@@ -83,8 +139,21 @@ export class AuthSessionService {
 
     try {
       localStorage.removeItem(AuthSessionService.STORAGE_KEY);
+      localStorage.removeItem(AuthSessionService.ADMIN_CHURCH_CONTEXT_KEY);
     } catch {
       // ignore browser storage failures
+    }
+  }
+
+  private readAdminChurchIdFromStorage(): string | null {
+    if (!isPlatformBrowser(this.platformId)) {
+      return null;
+    }
+
+    try {
+      return this.normalizeChurchId(localStorage.getItem(AuthSessionService.ADMIN_CHURCH_CONTEXT_KEY));
+    } catch {
+      return null;
     }
   }
 
@@ -125,6 +194,15 @@ export class AuthSessionService {
     } catch {
       // ignore browser storage failures
     }
+  }
+
+  private normalizeChurchId(churchId: string | number | null | undefined): string | null {
+    if (churchId === null || churchId === undefined) {
+      return null;
+    }
+
+    const normalizedChurchId = String(churchId).trim();
+    return normalizedChurchId.length > 0 ? normalizedChurchId : null;
   }
 
   private decodeJwtPayload(token: string): Record<string, unknown> | null {

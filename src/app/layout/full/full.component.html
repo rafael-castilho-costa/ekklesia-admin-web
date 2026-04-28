@@ -33,7 +33,7 @@
         <mat-icon>attach_money</mat-icon>
         <span>Financeiro</span>
       </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('visitors')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+      <a class="sidebar-item" [routerLink]="tenantLink('sunday-school')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
         <mat-icon>menu_book</mat-icon>
         <span>Escola Biblica</span>
       </a>
@@ -42,6 +42,25 @@
         <span>Relatorios</span>
       </div>
     </nav>
+
+    <ng-container *ngIf="isAdminMaster$ | async">
+      <div class="sidebar-label admin-label">Administracao</div>
+
+      <nav class="sidebar-nav">
+        <a class="sidebar-item" [routerLink]="adminLink('churches')" routerLinkActive="active-item" matTooltip="Igrejas" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+          <mat-icon>account_balance</mat-icon>
+          <span>Igrejas</span>
+        </a>
+        <a class="sidebar-item" [routerLink]="adminLink('users')" routerLinkActive="active-item" matTooltip="Usuarios" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+          <mat-icon>manage_accounts</mat-icon>
+          <span>Usuarios</span>
+        </a>
+        <a class="sidebar-item" [routerLink]="adminLink('personas')" routerLinkActive="active-item" matTooltip="Pessoas" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
+          <mat-icon>badge</mat-icon>
+          <span>Pessoas</span>
+        </a>
+      </nav>
+    </ng-container>
 
     <div class="sidebar-footer">v1.0 - Prototipo</div>
     </div>
@@ -56,10 +75,18 @@
       <div class="page-title">
         <mat-icon>dashboard_customize</mat-icon>
         <h1>{{ pageTitle }}</h1>
-        <span class="tenant-chip">{{ churchId }}</span>
+        <span class="tenant-chip">{{ isAdminArea ? 'ADMIN' : churchId }}</span>
       </div>
 
       <div class="topbar-actions">
+        <label class="admin-context-select" *ngIf="isAdminArea && (isAdminMaster$ | async)">
+          <span>Contexto</span>
+          <select [ngModel]="adminChurchId" (ngModelChange)="onAdminChurchContextChange($event)">
+            <option value="">Plataforma</option>
+            <option *ngFor="let church of adminChurches" [value]="church.id">{{ church.name }}</option>
+          </select>
+        </label>
+
         <button
           mat-icon-button
           class="action-button"
@@ -72,18 +99,69 @@
         </button>
 
         <button mat-icon-button class="avatar-button" [matMenuTriggerFor]="menu">
-          AD
+          {{ userInitials(currentUser$ | async) }}
         </button>
 
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item>
-            <mat-icon>person</mat-icon>
-            <span>Perfil</span>
-          </button>
-          <button mat-menu-item (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            <span>Sair</span>
-          </button>
+        <mat-menu #menu="matMenu" class="user-menu-panel">
+          <ng-template matMenuContent>
+            <section class="user-menu" *ngIf="currentUser$ | async as user; else sessionFallback">
+              <header class="user-menu-header">
+                <div class="user-menu-avatar">{{ userInitials(user) }}</div>
+                <div class="user-menu-identity">
+                  <strong>{{ user.name }}</strong>
+                  <span>{{ user.email }}</span>
+                </div>
+              </header>
+
+              <div class="user-menu-section">
+                <span class="user-menu-label">Perfis aplicados</span>
+                <div class="role-list" *ngIf="user.roles?.length; else noRoles">
+                  <span class="role-chip" *ngFor="let role of user.roles">{{ roleLabel(role) }}</span>
+                </div>
+                <ng-template #noRoles>
+                  <span class="muted-value">Nenhum perfil informado</span>
+                </ng-template>
+              </div>
+
+              <div class="user-menu-section info-grid">
+                <div>
+                  <span class="user-menu-label">Igreja</span>
+                  <strong>{{ user.churchName || 'Plataforma' }}</strong>
+                </div>
+                <div>
+                  <span class="user-menu-label">ID igreja</span>
+                  <strong>{{ user.churchId || '-' }}</strong>
+                </div>
+                <div>
+                  <span class="user-menu-label">Pessoa</span>
+                  <strong>{{ user.personaId }}</strong>
+                </div>
+                <div>
+                  <span class="user-menu-label">Usuario</span>
+                  <strong>{{ user.userId || user.id }}</strong>
+                </div>
+              </div>
+            </section>
+
+            <ng-template #sessionFallback>
+              <section class="user-menu">
+                <header class="user-menu-header">
+                  <div class="user-menu-avatar">AD</div>
+                  <div class="user-menu-identity">
+                    <strong>Usuario</strong>
+                    <span>Sessao sem dados carregados</span>
+                  </div>
+                </header>
+              </section>
+            </ng-template>
+
+            <div class="user-menu-actions">
+              <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span>Sair</span>
+              </button>
+            </div>
+          </ng-template>
         </mat-menu>
       </div>
     </header>

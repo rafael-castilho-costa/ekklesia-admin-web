@@ -145,7 +145,7 @@
         </div>
 
         <div class="form-field">
-          <label for="taxId">CPF/CNPJ *</label>
+          <label for="taxId">CPF/CNPJ{{ isVisitorStatus ? '' : ' *' }}</label>
           <input id="taxId" formControlName="taxId" type="text" placeholder="Documento da pessoa">
         </div>
       </div>

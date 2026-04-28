@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize, switchMap, throwError } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { AuthApiService } from '../core/api/auth-api.service';
 import { AuthSessionService } from '../core/auth/auth-session.service';
 import { TenantContextService } from '../core/tenant/tenant-context.service';
@@ -65,11 +65,9 @@ export class LoginComponent {
           this.authSessionService.setSession({ accessToken: response.token });
 
           const churchIdHeader = this.authSessionService.getChurchIdHeaderValue();
-          if (!churchIdHeader) {
-            return throwError(() => new Error('Nao foi possivel identificar a igreja no token recebido.'));
+          if (churchIdHeader) {
+            this.tenantContextService.setChurchId(churchIdHeader);
           }
-
-          this.tenantContextService.setChurchId(churchIdHeader);
 
           return this.authApiService.getAuthenticatedUser();
         }),
@@ -87,6 +85,17 @@ export class LoginComponent {
             ...currentSession,
             user
           });
+          if (user.adminMaster) {
+            this.authSessionService.clearAdminChurchId();
+            this.router.navigate(['/admin/churches']);
+            return;
+          }
+
+          if (!user.churchId) {
+            this.authErrorMessage = 'Nao foi possivel identificar a igreja do usuario.';
+            return;
+          }
+
           this.tenantContextService.setChurchId(String(user.churchId));
           this.router.navigate([String(user.churchId), 'home']);
         },

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminMasterGuard } from './core/guards/admin-master.guard';
 import { LoginComponent } from './authentication/login.component';
 import { FullComponent } from './layout/full/full.component';
 
@@ -12,6 +13,33 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent
+  },
+  {
+    path: 'admin',
+    component: FullComponent,
+    canActivate: [authGuard, adminMasterGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'churches'
+      },
+      {
+        path: 'churches',
+        loadComponent: () => import('./features/admin/admin-churches.component').then(m => m.AdminChurchesComponent),
+        data: { title: 'Administração - Igrejas' }
+      },
+      {
+        path: 'users',
+        loadComponent: () => import('./features/admin/admin-users.component').then(m => m.AdminUsersComponent),
+        data: { title: 'Administração - Usuarios' }
+      },
+      {
+        path: 'personas',
+        loadComponent: () => import('./features/admin/admin-personas.component').then(m => m.AdminPersonasComponent),
+        data: { title: 'Administração - Pessoas' }
+      }
+    ]
   },
   {
     path: ':churchId',
@@ -44,13 +72,18 @@ export const routes: Routes = [
         pathMatch: 'full'
       },
       {
-        path: 'visitors',
-        loadComponent: () => import('./features/visitors/visitors.component').then(m => m.VisitorsComponent),
-        data: { title: 'Visitantes' }
+        path: 'sunday-school',
+        loadComponent: () => import('./features/sunday-school/sunday-school.component').then(m => m.SundaySchoolComponent),
+        data: { title: 'Escola Dominical' }
       },
       {
-        path: 'visitantes',
-        redirectTo: 'visitors',
+        path: 'visitors',
+        redirectTo: 'sunday-school',
+        pathMatch: 'full'
+      },
+      {
+        path: 'Escola Dominical',
+        redirectTo: 'sunday-school',
         pathMatch: 'full'
       },
       {
