@@ -114,7 +114,7 @@ export class LoginComponent {
       };
 
       if (httpError.status === 0) {
-        return 'Nao foi possivel conectar com o servidor em http://localhost:8081.';
+        return 'Nao foi possivel conectar com o servidor. Verifique se a API esta disponivel.';
       }
 
       if (httpError.status === 400 || httpError.status === 401 || httpError.status === 403) {
