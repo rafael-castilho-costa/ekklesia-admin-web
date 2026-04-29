@@ -21,21 +21,17 @@
     <div class="sidebar-label">Navegacao</div>
 
     <nav class="sidebar-nav">
-      <a class="sidebar-item" [routerLink]="tenantLink('home')" routerLinkActive="active-item" matTooltip="Dashboard" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('members')" routerLinkActive="active-item" matTooltip="Membros" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
-        <mat-icon>group</mat-icon>
-        <span>Membros</span>
-      </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('finance')" routerLinkActive="active-item" matTooltip="Financeiro" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
-        <mat-icon>attach_money</mat-icon>
-        <span>Financeiro</span>
-      </a>
-      <a class="sidebar-item" [routerLink]="tenantLink('sunday-school')" routerLinkActive="active-item" matTooltip="Escola Biblica" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
-        <mat-icon>menu_book</mat-icon>
-        <span>Escola Biblica</span>
+      <a
+        class="sidebar-item"
+        *ngFor="let item of visibleTenantNavItems"
+        [routerLink]="tenantLink(item.path)"
+        routerLinkActive="active-item"
+        [matTooltip]="item.tooltip"
+        matTooltipPosition="right"
+        [matTooltipDisabled]="isOpened"
+      >
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
       </a>
       <div class="sidebar-item disabled-item" matTooltip="Relatorios (em breve)" matTooltipPosition="right" [matTooltipDisabled]="isOpened">
         <mat-icon>description</mat-icon>
@@ -90,13 +86,53 @@
         <button
           mat-icon-button
           class="action-button"
-          matBadge="3"
+          [matMenuTriggerFor]="notificationsMenu"
+          [matBadge]="unreadNotificationsCount"
+          [matBadgeHidden]="unreadNotificationsCount === 0"
           matBadgeSize="small"
           matBadgeColor="warn"
           matBadgeOverlap="true"
+          aria-label="Abrir notificacoes"
         >
           <mat-icon>notifications_none</mat-icon>
         </button>
+
+        <mat-menu #notificationsMenu="matMenu" class="notifications-menu-panel">
+          <ng-template matMenuContent>
+            <section class="notifications-menu">
+              <header class="notifications-header">
+                <div>
+                  <strong>Notificacoes</strong>
+                  <span>{{ unreadNotificationsCount }} nao lidas</span>
+                </div>
+                <button type="button" class="mark-all-button" (click)="markAllNotificationsAsRead()" [disabled]="unreadNotificationsCount === 0">
+                  Marcar lidas
+                </button>
+              </header>
+
+              <div class="notification-list" *ngIf="notifications.length; else noNotifications">
+                <button
+                  type="button"
+                  class="notification-item"
+                  *ngFor="let notification of notifications"
+                  [class.unread]="!notification.read"
+                  (click)="markNotificationAsRead(notification)"
+                >
+                  <mat-icon>{{ notification.icon }}</mat-icon>
+                  <span class="notification-copy">
+                    <strong>{{ notification.title }}</strong>
+                    <span>{{ notification.message }}</span>
+                    <small>{{ notification.createdAt }}</small>
+                  </span>
+                </button>
+              </div>
+
+              <ng-template #noNotifications>
+                <div class="empty-notifications">Nenhuma notificacao.</div>
+              </ng-template>
+            </section>
+          </ng-template>
+        </mat-menu>
 
         <button mat-icon-button class="avatar-button" [matMenuTriggerFor]="menu">
           {{ userInitials(currentUser$ | async) }}

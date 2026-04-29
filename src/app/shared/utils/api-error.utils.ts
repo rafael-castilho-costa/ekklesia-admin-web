@@ -12,6 +12,10 @@ export function resolveApiErrorMessage(error: unknown, fallbackMessage: string):
     if (httpError.status === 401) {
       return 'JWT is invalid or expired.';
     }
+
+    if (httpError.status === 403) {
+      return 'Seu perfil nao tem permissao para acessar este recurso.';
+    }
   }
 
   return fallbackMessage;

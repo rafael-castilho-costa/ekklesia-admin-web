@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { finalize } from 'rxjs';
 import { FinanceApiService, FinanceTransactionFilters } from '../../core/api/finance-api.service';
+import { AuthSessionService } from '../../core/auth/auth-session.service';
+import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import {
   FinanceTransaction,
   FinanceTransactionRequest,
@@ -11,33 +14,21 @@ import {
 } from '../../shared/models/api.models';
 import { resolveApiErrorMessage } from '../../shared/utils/api-error.utils';
 import { formatCurrency, formatIsoDateToBr, todayIsoDate } from '../../shared/utils/format.utils';
-
-interface ComparativoMensal {
-  mes: string;
-  entradas: number;
-  saidas: number;
-}
-
-interface CategoriaEntrada {
-  nome: string;
-  valor: number;
-  cor: string;
-  classe: string;
-}
+import { PaginationComponent } from '../../shared/components/pagination.component';
 
 @Component({
   standalone: true,
   selector: 'app-finance',
   templateUrl: './finance.component.html',
   styleUrls: ['./finance.component.css'],
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule, PaginationComponent]
 })
 export class FinanceComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly authSessionService = inject(AuthSessionService);
+  private readonly tenantContextService = inject(TenantContextService);
   private readonly financeApiService = inject(FinanceApiService);
-
-  readonly escalaComparativo = 60000;
-  readonly categoryColors = ['#132f5f', '#1783df', '#05a56a', '#eba43b', '#7b61ff', '#cf3548'];
 
   transactions: FinanceTransaction[] = [];
   filtroTipo: 'todos' | FinanceTransactionType = 'todos';
@@ -50,6 +41,8 @@ export class FinanceComponent implements OnInit {
   isModalOpen = false;
   pageErrorMessage: string | null = null;
   submitErrorMessage: string | null = null;
+  page = 1;
+  pageSize = 10;
 
   readonly launchForm = this.fb.group({
     type: ['INCOME' as FinanceTransactionType, [Validators.required]],
@@ -62,6 +55,7 @@ export class FinanceComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.syncChurchContext();
     this.loadTransactions();
   }
 
@@ -89,72 +83,23 @@ export class FinanceComponent implements OnInit {
     return [...this.filteredTransactions].sort((a, b) => b.transactionDate.localeCompare(a.transactionDate));
   }
 
-  get comparativoMensal(): ComparativoMensal[] {
-    const now = new Date();
-
-    return Array.from({ length: 6 }, (_, index) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const monthTransactions = this.transactions.filter((transaction) => {
-        const transactionDate = this.parseLocalDate(transaction.transactionDate);
-        return transactionDate.getFullYear() === year && transactionDate.getMonth() === month;
-      });
-
-      return {
-        mes: date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
-        entradas: this.sumByType(monthTransactions, 'INCOME'),
-        saidas: this.sumByType(monthTransactions, 'EXPENSE')
-      };
-    });
-  }
-
-  get categoriasEntrada(): CategoriaEntrada[] {
-    const incomeTransactions = this.filteredTransactions.filter((transaction) => transaction.type === 'INCOME');
-    const total = this.sumByType(incomeTransactions, 'INCOME');
-
-    if (!total) {
-      return [];
-    }
-
-    const grouped = incomeTransactions.reduce<Record<string, number>>((acc, transaction) => {
-      acc[transaction.category] = (acc[transaction.category] ?? 0) + transaction.amount;
-      return acc;
-    }, {});
-
-    return Object.entries(grouped)
-      .sort(([, amountA], [, amountB]) => amountB - amountA)
-      .map(([nome, amount], index) => ({
-        nome,
-        valor: Math.round((amount / total) * 100),
-        cor: this.categoryColors[index % this.categoryColors.length],
-        classe: `label-${index}`
-      }));
-  }
-
-  get donutGradient(): string {
-    if (!this.categoriasEntrada.length) {
-      return 'conic-gradient(#dbe4ef 0% 100%)';
-    }
-
-    let acumulado = 0;
-    const fatias = this.categoriasEntrada.map((categoria, index) => {
-      const inicio = acumulado;
-      const fim = index === this.categoriasEntrada.length - 1 ? 100 : acumulado + categoria.valor;
-      acumulado = fim;
-      return `${categoria.cor} ${inicio}% ${fim}%`;
-    });
-
-    return `conic-gradient(${fatias.join(', ')})`;
-  }
-
-  get maxComparativo(): number {
-    const valores = this.comparativoMensal.flatMap((item) => [item.entradas, item.saidas]);
-    return Math.max(this.escalaComparativo, ...valores);
+  get lancamentosPaginados(): FinanceTransaction[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.lancamentosFiltrados.slice(start, start + this.pageSize);
   }
 
   onFiltroChange(): void {
+    this.page = 1;
     this.loadTransactions();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
   }
 
   loadTransactions(): void {
@@ -167,6 +112,7 @@ export class FinanceComponent implements OnInit {
       .subscribe({
         next: (transactions) => {
           this.transactions = transactions;
+          this.page = 1;
         },
         error: (error) => {
           this.pageErrorMessage = this.resolveErrorMessage(error, 'Nao foi possivel carregar os lancamentos financeiros.');
@@ -224,10 +170,6 @@ export class FinanceComponent implements OnInit {
     this.filtroDataInicio = '';
     this.filtroDataFim = '';
     this.loadTransactions();
-  }
-
-  alturaBarra(valor: number): number {
-    return Math.max((valor / this.maxComparativo) * 100, valor > 0 ? 4 : 0);
   }
 
   tipoIcone(tipo: FinanceTransactionType): string {
@@ -300,16 +242,38 @@ export class FinanceComponent implements OnInit {
       .reduce((total, transaction) => total + transaction.amount, 0);
   }
 
-  private parseLocalDate(date: string): Date {
-    const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
   private today(): string {
     return todayIsoDate();
   }
 
   private resolveErrorMessage(error: unknown, fallbackMessage: string): string {
     return resolveApiErrorMessage(error, fallbackMessage);
+  }
+
+  private syncChurchContext(): void {
+    const churchId =
+      this.getRouteChurchId() ??
+      this.authSessionService.getChurchIdHeaderValue() ??
+      this.tenantContextService.getChurchId();
+
+    if (churchId) {
+      this.tenantContextService.setChurchId(churchId);
+    }
+  }
+
+  private getRouteChurchId(): string | null {
+    let currentRoute: ActivatedRoute | null = this.route;
+
+    while (currentRoute) {
+      const churchId = currentRoute.snapshot.paramMap.get('churchId');
+
+      if (churchId) {
+        return churchId;
+      }
+
+      currentRoute = currentRoute.parent;
+    }
+
+    return null;
   }
 }

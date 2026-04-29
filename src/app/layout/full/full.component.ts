@@ -17,6 +17,24 @@ import { filter, startWith, map, Observable } from 'rxjs';
 import { AuthService } from "../../core/auth/auth.service";
 import { AdminChurchesApiService } from "../../core/api/admin-churches-api.service";
 import { AuthMeResponse, Church } from "../../shared/models/api.models";
+import { PermissionContext, PermissionService } from "../../core/auth/permission.service";
+
+interface TenantNavItem {
+  path: string;
+  icon: string;
+  label: string;
+  tooltip: string;
+  permission: PermissionContext;
+}
+
+interface AppNotification {
+  id: number;
+  title: string;
+  message: string;
+  icon: string;
+  createdAt: string;
+  read: boolean;
+}
 
 @Component({
   standalone: true,
@@ -40,6 +58,7 @@ import { AuthMeResponse, Church } from "../../shared/models/api.models";
 export class FullComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authSessionService = inject(AuthSessionService);
+  private readonly permissionService = inject(PermissionService);
 
   isOpened = true;
   pageTitle = 'Dashboard';
@@ -51,6 +70,38 @@ export class FullComponent implements OnInit {
   churchName$!: Observable<string>;
   currentUser$!: Observable<AuthMeResponse | null>;
   isAdminMaster$!: Observable<boolean>;
+  readonly tenantNavItems: TenantNavItem[] = [
+    { path: 'home', icon: 'dashboard', label: 'Dashboard', tooltip: 'Dashboard', permission: 'dashboard' },
+    { path: 'members', icon: 'group', label: 'Membros', tooltip: 'Membros', permission: 'members' },
+    { path: 'finance', icon: 'attach_money', label: 'Financeiro', tooltip: 'Financeiro', permission: 'finance' },
+    { path: 'sunday-school', icon: 'menu_book', label: 'Escola Biblica', tooltip: 'Escola Biblica', permission: 'sunday-school' }
+  ];
+  notifications: AppNotification[] = [
+    {
+      id: 1,
+      title: 'Dashboard atualizado',
+      message: 'Os indicadores financeiros agora usam os lancamentos reais.',
+      icon: 'dashboard_customize',
+      createdAt: 'Agora',
+      read: false
+    },
+    {
+      id: 2,
+      title: 'Permissoes aplicadas',
+      message: 'O menu mostra apenas os modulos liberados para o perfil.',
+      icon: 'verified_user',
+      createdAt: 'Hoje',
+      read: false
+    },
+    {
+      id: 3,
+      title: 'Paginacao ativa',
+      message: 'Listas de membros, usuarios e financeiro usam paginacao padrao.',
+      icon: 'format_list_numbered',
+      createdAt: 'Hoje',
+      read: false
+    }
+  ];
 
   constructor(
     private router: Router,
@@ -92,6 +143,25 @@ export class FullComponent implements OnInit {
 
   tenantLink(path: string): string[] {
     return ['/', this.churchId || this.defaultChurchId, path];
+  }
+
+  get visibleTenantNavItems(): TenantNavItem[] {
+    return this.tenantNavItems.filter((item) => this.permissionService.canAccessContext(item.permission));
+  }
+
+  get unreadNotificationsCount(): number {
+    return this.notifications.filter((notification) => !notification.read).length;
+  }
+
+  markNotificationAsRead(notification: AppNotification): void {
+    notification.read = true;
+  }
+
+  markAllNotificationsAsRead(): void {
+    this.notifications = this.notifications.map((notification) => ({
+      ...notification,
+      read: true
+    }));
   }
 
   adminLink(path: string): string[] {

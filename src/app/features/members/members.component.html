@@ -79,7 +79,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let membro of members; trackBy: trackByMember">
+          <tr *ngFor="let membro of paginatedMembers; trackBy: trackByMember">
             <td>{{ membro.persona.name }}</td>
             <td>{{ membro.persona.email || '-' }}</td>
             <td>{{ membro.persona.phone || '-' }}</td>
@@ -109,6 +109,15 @@
         </tbody>
       </table>
     </div>
+
+    <app-pagination
+      *ngIf="!isInitialLoading && !isLoadingMembers"
+      [totalItems]="members.length"
+      [page]="page"
+      [pageSize]="pageSize"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></app-pagination>
   </section>
 </section>
 

@@ -7,11 +7,12 @@ import { finalize, forkJoin } from 'rxjs';
 import { AdminChurchesApiService } from '../../core/api/admin-churches-api.service';
 import { AdminUsersApiService } from '../../core/api/admin-users-api.service';
 import { AdminUser, AdminUserRequest, Church, RoleEnum, UserScope } from '../../shared/models/api.models';
+import { PaginationComponent } from '../../shared/components/pagination.component';
 
 @Component({
   standalone: true,
   selector: 'app-admin-users',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule, PaginationComponent],
   template: `
     <section class="admin-page">
       <header class="admin-header">
@@ -29,7 +30,7 @@ import { AdminUser, AdminUserRequest, Church, RoleEnum, UserScope } from '../../
         <div class="admin-panel-header">
           <div class="search-box">
             <mat-icon>search</mat-icon>
-            <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="searchTerm">
+            <input type="text" placeholder="Buscar por nome ou email" [(ngModel)]="searchTerm" (ngModelChange)="page = 1">
           </div>
         </div>
 
@@ -49,8 +50,8 @@ import { AdminUser, AdminUserRequest, Church, RoleEnum, UserScope } from '../../
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let user of filteredUsers">
-                <td>{{ user.name }}</td>
+              <tr *ngFor="let user of paginatedUsers">
+                <td>{{ userName(user) }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.scope }}</td>
                 <td>{{ user.churchName || user.churchId || '-' }}</td>
@@ -82,7 +83,17 @@ import { AdminUser, AdminUserRequest, Church, RoleEnum, UserScope } from '../../
               </tr>
             </tbody>
           </table>
+
         </div>
+
+        <app-pagination
+          *ngIf="!isLoading"
+          [totalItems]="filteredUsers.length"
+          [page]="page"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></app-pagination>
       </section>
     </section>
 
@@ -182,6 +193,8 @@ export class AdminUsersComponent implements OnInit {
   isSubmitting = false;
   isModalOpen = false;
   editingUser: AdminUser | null = null;
+  page = 1;
+  pageSize = 10;
 
   readonly availableRoles = [
     RoleEnum.ROLE_ADMIN,
@@ -213,9 +226,23 @@ export class AdminUsersComponent implements OnInit {
     }
 
     return this.users.filter((user) =>
-      user.name.toLowerCase().includes(term) ||
+      this.userName(user).toLowerCase().includes(term) ||
       user.email.toLowerCase().includes(term)
     );
+  }
+
+  get paginatedUsers(): AdminUser[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredUsers.slice(start, start + this.pageSize);
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
   }
 
   openCreate(): void {
@@ -238,7 +265,7 @@ export class AdminUsersComponent implements OnInit {
   openEdit(user: AdminUser): void {
     this.editingUser = user;
     this.form.reset({
-      name: user.name,
+      name: this.userName(user),
       email: user.email,
       password: '',
       personaId: user.personaId ? String(user.personaId) : '',
@@ -341,7 +368,7 @@ export class AdminUsersComponent implements OnInit {
   }
 
   delete(user: AdminUser): void {
-    if (!confirm(`Deseja excluir o usuario "${user.name}"?`)) {
+    if (!confirm(`Deseja excluir o usuario "${this.userName(user)}"?`)) {
       return;
     }
 
@@ -365,6 +392,10 @@ export class AdminUsersComponent implements OnInit {
         },
         error: () => alert('Nao foi possivel carregar os usuarios.')
       });
+  }
+
+  userName(user: AdminUser): string {
+    return user.name || user.personaName || '';
   }
 
   private configureScopeRules(): void {

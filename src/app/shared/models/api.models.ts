@@ -109,7 +109,8 @@ export interface AdminUser {
   id: number;
   userId?: number;
   email: string;
-  name: string;
+  name?: string | null;
+  personaName?: string | null;
   personaId?: number | null;
   churchId?: number | null;
   churchName?: string | null;

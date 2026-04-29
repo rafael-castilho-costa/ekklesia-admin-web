@@ -27,48 +27,6 @@
     </article>
   </div>
 
-  <div class="charts-grid">
-    <article class="panel">
-      <h2>Comparativo Mensal</h2>
-
-      <div class="bar-chart">
-        <div class="month-group" *ngFor="let item of comparativoMensal">
-          <div class="month-bars">
-            <span class="bar entradas" [style.height.%]="alturaBarra(item.entradas)"></span>
-            <span class="bar saidas" [style.height.%]="alturaBarra(item.saidas)"></span>
-          </div>
-          <span class="month-label">{{ item.mes }}</span>
-        </div>
-      </div>
-
-      <div class="chart-legend">
-        <span><i class="legend-color entradas"></i>Entradas</span>
-        <span><i class="legend-color saidas"></i>Saidas</span>
-      </div>
-    </article>
-
-    <article class="panel categories-panel">
-      <h2>Entradas por Categoria</h2>
-
-      <div class="donut-wrap">
-        <div class="donut-chart" [style.background]="donutGradient">
-          <div class="donut-hole"></div>
-        </div>
-
-        <div *ngIf="categoriasEntrada.length === 0" class="donut-empty">Sem entradas</div>
-
-        <div
-          *ngFor="let categoria of categoriasEntrada; let index = index"
-          class="donut-label"
-          [ngClass]="'label-' + index"
-          [style.color]="categoria.cor"
-        >
-          {{ categoria.nome }} {{ categoria.valor }}%
-        </div>
-      </div>
-    </article>
-  </div>
-
   <article class="panel lancamentos-panel">
     <header class="lancamentos-header">
       <h2>Lancamentos</h2>
@@ -139,7 +97,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let lancamento of lancamentosFiltrados; trackBy: trackByLancamento">
+          <tr *ngFor="let lancamento of lancamentosPaginados; trackBy: trackByLancamento">
             <td>
               <mat-icon [ngClass]="tipoClasse(lancamento.type)">{{ tipoIcone(lancamento.type) }}</mat-icon>
             </td>
@@ -164,6 +122,15 @@
         </tbody>
       </table>
     </div>
+
+    <app-pagination
+      *ngIf="!isLoading"
+      [totalItems]="lancamentosFiltrados.length"
+      [page]="page"
+      [pageSize]="pageSize"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></app-pagination>
   </article>
 </section>
 

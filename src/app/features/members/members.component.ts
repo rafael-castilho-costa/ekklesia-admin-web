@@ -32,11 +32,12 @@ import {
 } from '../../shared/models/api.models';
 import { resolveApiErrorMessage } from '../../shared/utils/api-error.utils';
 import { formatIsoDateToBr } from '../../shared/utils/format.utils';
+import { PaginationComponent } from '../../shared/components/pagination.component';
 
 @Component({
   standalone: true,
   selector: 'app-members',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule, PaginationComponent],
   templateUrl: './members.component.html',
   styleUrls: ['./members.component.css']
 })
@@ -92,6 +93,8 @@ export class MembersComponent implements OnInit {
   pageErrorMessage: string | null = null;
   submitErrorMessage: string | null = null;
   successMessage: string | null = null;
+  page = 1;
+  pageSize = 10;
 
   private editingMember: Member | null = null;
 
@@ -116,6 +119,11 @@ export class MembersComponent implements OnInit {
     return this.editingMember ? 'Editar Membro' : 'Cadastrar Membro';
   }
 
+  get paginatedMembers(): Member[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.members.slice(start, start + this.pageSize);
+  }
+
   get showSpouseFields(): boolean {
     return !this.editingMember && this.memberForm.controls.maritalStatus.value === 'CASADO';
   }
@@ -130,7 +138,17 @@ export class MembersComponent implements OnInit {
   }
 
   onStatusFilterChange(): void {
+    this.page = 1;
     this.loadMembers();
+  }
+
+  onPageChange(page: number): void {
+    this.page = page;
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
   }
 
   novoMembro(): void {
@@ -228,6 +246,7 @@ export class MembersComponent implements OnInit {
       .subscribe({
         next: (members) => {
           this.members = members;
+          this.page = 1;
           this.successMessage = 'Membro excluido com sucesso.';
         },
         error: (error) => {
@@ -303,6 +322,7 @@ export class MembersComponent implements OnInit {
       .subscribe({
         next: (members) => {
           this.members = members;
+          this.page = 1;
           this.successMessage = this.editingMember
             ? 'Membro atualizado com sucesso.'
             : 'Membro criado com sucesso.';
@@ -380,6 +400,7 @@ export class MembersComponent implements OnInit {
           this.ministries = enums.ministries;
           this.memberStatuses = enums.memberStatuses;
           this.members = members;
+          this.page = 1;
         },
         error: (error) => {
           this.pageErrorMessage = this.resolveErrorMessage(error, 'Nao foi possivel carregar a tela de membros.');
@@ -431,6 +452,7 @@ export class MembersComponent implements OnInit {
       .subscribe({
         next: (members) => {
           this.members = members;
+          this.page = 1;
         },
         error: (error) => {
           this.pageErrorMessage = this.resolveErrorMessage(error, 'Nao foi possivel carregar os membros.');

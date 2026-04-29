@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminMasterGuard } from './core/guards/admin-master.guard';
+import { moduleAccessGuard } from './core/guards/module-access.guard';
 import { LoginComponent } from './authentication/login.component';
 import { FullComponent } from './layout/full/full.component';
 
@@ -49,12 +50,14 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
-        data: { title: 'Dashboard' }
+        canActivate: [moduleAccessGuard],
+        data: { title: 'Dashboard', permission: 'dashboard' }
       },
       {
         path: 'members',
         loadComponent: () => import('./features/members/members.component').then(m => m.MembersComponent),
-        data: { title: 'Membros' }
+        canActivate: [moduleAccessGuard],
+        data: { title: 'Membros', permission: 'members' }
       },
       {
         path: 'membros',
@@ -64,7 +67,8 @@ export const routes: Routes = [
       {
         path: 'finance',
         loadComponent: () => import('./features/finance/finance.component').then(m => m.FinanceComponent),
-        data: { title: 'Financeiro' }
+        canActivate: [moduleAccessGuard],
+        data: { title: 'Financeiro', permission: 'finance' }
       },
       {
         path: 'agenda',
@@ -74,7 +78,8 @@ export const routes: Routes = [
       {
         path: 'sunday-school',
         loadComponent: () => import('./features/sunday-school/sunday-school.component').then(m => m.SundaySchoolComponent),
-        data: { title: 'Escola Dominical' }
+        canActivate: [moduleAccessGuard],
+        data: { title: 'Escola Dominical', permission: 'sunday-school' }
       },
       {
         path: 'visitors',
@@ -92,17 +97,20 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () => import('./features/churches/churches-list.component').then(m => m.ChurchesListComponent),
-            data: { title: 'Igrejas' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Igrejas', permission: 'churches' }
           },
           {
             path: 'new',
             loadComponent: () => import('./features/churches/churches-form.component').then(m => m.ChurchesFormComponent),
-            data: { title: 'Nova Igreja' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Nova Igreja', permission: 'churches' }
           },
           {
             path: ':id/edit',
             loadComponent: () => import('./features/churches/churches-form.component').then(m => m.ChurchesFormComponent),
-            data: { title: 'Editar Igreja' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Editar Igreja', permission: 'churches' }
           }
         ]
       },
@@ -112,17 +120,20 @@ export const routes: Routes = [
           {
             path: '',
             loadComponent: () => import('./features/personas/personas-list.component').then(m => m.PersonasListComponent),
-            data: { title: 'Pessoas' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Pessoas', permission: 'personas' }
           },
           {
             path: 'new',
             loadComponent: () => import('./features/personas/personas-form.component').then(m => m.PersonasFormComponent),
-            data: { title: 'Nova Pessoa' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Nova Pessoa', permission: 'personas' }
           },
           {
             path: ':id/edit',
             loadComponent: () => import('./features/personas/personas-form.component').then(m => m.PersonasFormComponent),
-            data: { title: 'Editar Pessoa' }
+            canActivate: [moduleAccessGuard],
+            data: { title: 'Editar Pessoa', permission: 'personas' }
           }
         ]
       }

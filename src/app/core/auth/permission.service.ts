@@ -2,74 +2,111 @@ import { Injectable, inject } from '@angular/core';
 import { AuthSessionService } from './auth-session.service';
 import { RoleEnum } from '../../shared/models/api.models';
 
+export type PermissionContext =
+  | 'dashboard'
+  | 'members'
+  | 'personas'
+  | 'churches'
+  | 'finance'
+  | 'sunday-school'
+  | 'administration';
+
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionService {
   private readonly authSessionService = inject(AuthSessionService);
 
-  /**
-   * Verifica se o usuário é administrador
-   */
   isAdmin(): boolean {
     return this.hasRole(RoleEnum.ROLE_ADMIN);
   }
 
-  /**
-   * Verifica se o usuário é secretário
-   */
   isSecretary(): boolean {
     return this.hasRole(RoleEnum.ROLE_SECRETARY);
+  }
+
+  isTreasurer(): boolean {
+    return this.hasRole(RoleEnum.ROLE_TREASURER);
   }
 
   isAdminMaster(): boolean {
     return this.authSessionService.isAdminMaster();
   }
 
-  /**
-   * Verifica se o usuário tem um role específico
-   */
   hasRole(role: string): boolean {
     const session = this.authSessionService.getSession();
     return session?.user?.roles.includes(role) ?? false;
   }
 
-  /**
-   * Verifica se o usuário pode visualizar igrejas
-   */
+  hasAnyRole(roles: string[]): boolean {
+    return roles.some((role) => this.hasRole(role));
+  }
+
   canViewChurches(): boolean {
-    return this.isAdmin() || this.isSecretary();
+    return this.isAdminMaster() || this.isAdmin() || this.isSecretary();
   }
 
-  /**
-   * Verifica se o usuário pode gerenciar igrejas (criar, editar, deletar)
-   */
   canManageChurches(): boolean {
-    return this.isAdmin();
+    return this.isAdminMaster() || this.isAdmin();
   }
 
-  /**
-   * Verifica se o usuário pode gerenciar pessoas
-   */
+  canViewPersonas(): boolean {
+    return this.isAdminMaster() || this.isAdmin() || this.isSecretary();
+  }
+
   canManagePersonas(): boolean {
-    return this.isAdmin() || this.isSecretary();
+    return this.canViewPersonas();
   }
 
-  /**
-   * Verifica se o usuário pode gerenciar membros
-   */
+  canViewMembers(): boolean {
+    return this.isAdminMaster() || this.isAdmin() || this.isSecretary();
+  }
+
   canManageMembers(): boolean {
-    return this.isAdmin() || this.isSecretary();
+    return this.canViewMembers();
   }
 
-  /**
-   * Verifica se o usuário pode deletar um recurso
-   */
+  canAccessFinance(): boolean {
+    return this.isAdminMaster() || this.isAdmin() || this.isTreasurer();
+  }
+
+  canAccessSundaySchool(): boolean {
+    return this.isAdminMaster() || this.isAdmin() || this.isSecretary();
+  }
+
   canDelete(): boolean {
-    return this.isAdmin();
+    return this.isAdminMaster() || this.isAdmin();
   }
 
   canAccessAdministration(): boolean {
     return this.isAdminMaster();
+  }
+
+  canAccessContext(context: PermissionContext): boolean {
+    switch (context) {
+      case 'dashboard':
+        return true;
+      case 'members':
+        return this.canViewMembers();
+      case 'personas':
+        return this.canViewPersonas();
+      case 'churches':
+        return this.canViewChurches();
+      case 'finance':
+        return this.canAccessFinance();
+      case 'sunday-school':
+        return this.canAccessSundaySchool();
+      case 'administration':
+        return this.canAccessAdministration();
+      default:
+        return false;
+    }
+  }
+
+  getDefaultTenantPath(): string {
+    const orderedContexts: PermissionContext[] = ['dashboard', 'members', 'finance', 'sunday-school', 'personas', 'churches'];
+    const firstAllowedContext = orderedContexts.find((context) => this.canAccessContext(context));
+
+    return firstAllowedContext === 'dashboard' || !firstAllowedContext ? 'home' : firstAllowedContext;
   }
 }
